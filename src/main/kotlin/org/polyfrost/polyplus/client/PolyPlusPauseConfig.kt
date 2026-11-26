@@ -13,7 +13,7 @@ import org.polyfrost.polyplus.client.gui.widgets.WidgetMigration
 
 object PolyPlusPauseConfig : Config(
     "${PolyPlusConstants.ID}-pause.json",
-    "Pause Screen (OneClient)",
+    "Pause Screen",
     Category.OTHER,
 ) {
     @Transient
@@ -38,7 +38,7 @@ object PolyPlusPauseConfig : Config(
         options = ["Full", "Spotlight", "Compact", "Classic", "Vanilla"],
         subcategory = "Style",
     )
-    var pauseScreenStyle: PauseScreenStyle = PauseScreenStyle.STEP_BACK_FLAT
+    var pauseScreenStyle: PauseScreenStyle = PauseScreenStyle.VANILLA
 
     @JvmStatic
     @Dropdown(
@@ -121,7 +121,7 @@ object PolyPlusPauseConfig : Config(
         description = "Swaps Open to LAN for Host World.",
         subcategory = "Menu",
     )
-    var replacePauseLanButton = true
+    var replacePauseLanButton = false
 
     @JvmStatic @Include
     var pauseRecordingWidget = true

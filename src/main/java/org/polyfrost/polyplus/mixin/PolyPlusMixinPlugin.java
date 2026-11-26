@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class PolyPlusMixinPlugin extends ConstraintsMixinPlugin {
-    private static final Logger LOGGER = LogManager.getLogger("PolyPlus/Compat");
+    private static final Logger LOGGER = LogManager.getLogger("SleepClient/Compat");
     private static final String COMPAT = "org.polyfrost.polyplus.mixin.compat.";
     private static final String SODIUM = "sodium";
     private static final String IRIS = "iris";

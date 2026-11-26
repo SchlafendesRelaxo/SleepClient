@@ -9,7 +9,7 @@ import java.io.File
 
 object LauncherEnvironment {
     private const val BRAND_PROPERTY = "minecraft.launcher.brand"
-    private const val BRAND = "OneClient"
+    private const val BRAND = "SleepClient"
 
     private const val MARKER_PROPERTY = "polyplus.launcher"
     private const val MARKER_ENV = "POLYPLUS_LAUNCHER"
@@ -18,11 +18,11 @@ object LauncherEnvironment {
 
     val launcherDir: File? by lazy { findLauncherDir() }
 
-    val isOneClient: Boolean by lazy {
+    val isSleepClient: Boolean by lazy {
         when (override()) {
-            "oneclient" -> true
+            "sleepclient" -> true
             "standalone" -> false
-            else -> brandIsOneClient() || launcherDir != null
+            else -> brandIsSleepClient() || launcherDir?.name.equals(BRAND, ignoreCase = true)
         }
     }
 
@@ -38,14 +38,19 @@ object LauncherEnvironment {
     private fun override(): String? =
         (System.getProperty(MARKER_PROPERTY) ?: System.getenv(MARKER_ENV))?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
 
-    private fun brandIsOneClient(): Boolean =
+    private fun brandIsSleepClient(): Boolean =
         System.getProperty(BRAND_PROPERTY)?.trim().equals(BRAND, ignoreCase = true)
 
     private fun findLauncherDir(): File? {
         var dir: File? = runCatching { FabricLoader.getInstance().gameDir.toFile().absoluteFile }.getOrNull()
         var depth = 0
         while (dir != null && depth <= MAX_WALK_UP) {
-            if (isLauncherDir(dir)) return dir
+            if (
+                isLauncherDir(dir) ||
+                (dir.name.equals(BRAND, ignoreCase = true) && File(dir, "clusters").isDirectory)
+            ) {
+                return dir
+            }
             dir = dir.parentFile
             depth++
         }

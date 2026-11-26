@@ -83,7 +83,7 @@ private val FLAT_TAG_GAP = 4.dp
 private val BAR_HEAD = 30.dp
 private val AWAY_SHIFT = 48.dp
 
-private enum class PauseNavTab { Game, Wardrobe, Social }
+private enum class PauseNavTab { Game, Social }
 
 @Composable
 internal fun BoxScope.StepBackScreen(screen: OneClientPauseScreen, narrow: Boolean, away: Float = 0f) {
@@ -191,7 +191,6 @@ private fun StepBackNav(screen: OneClientPauseScreen) {
         Box(Modifier.weight(1f)) { Wordmark() }
         val tabs = buildList {
             add(TabItem(PauseNavTab.Game, "Game"))
-            add(TabItem(PauseNavTab.Wardrobe, "Wardrobe"))
             if (screen.online) {
                 val dot = socialDotLabel(groups.any { it.unread }, invites.isNotEmpty())
                 add(TabItem(PauseNavTab.Social, "Social", badge = navTabBadge(dot != null), badgeDescription = dot))
@@ -200,7 +199,6 @@ private fun StepBackNav(screen: OneClientPauseScreen) {
         NavTabRow(tabs, PauseNavTab.Game, { tab ->
             when (tab) {
                 PauseNavTab.Game -> Unit
-                PauseNavTab.Wardrobe -> screen.openWardrobe()
                 PauseNavTab.Social -> screen.openSocial()
             }
         })

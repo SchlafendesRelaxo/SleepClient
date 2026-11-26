@@ -388,7 +388,7 @@ private fun DiscordRow() {
     val name = with(DiscordLink) { link?.label() }
     val signedOut = state.unavailable == DiscordLink.Unavailable.SignedOut
     val subtitle = when {
-        signedOut -> "Couldn't sign in to PolyPlus"
+        signedOut -> "Couldn't sign in to SleepClient"
         state.waiting -> "Finish in your browser"
         state.unlinking -> "Unlinking…"
         confirmUnlink -> "Unlink?"
@@ -415,7 +415,7 @@ private fun DiscordRow() {
         }
     }
     if (link == null && state.loaded && !signedOut) {
-        PanelToggle("Join the Polyfrost Discord", state.joinServer, DiscordLink::setJoinServer)
+        PanelToggle("Join the community Discord", state.joinServer, DiscordLink::setJoinServer)
     }
 }
 

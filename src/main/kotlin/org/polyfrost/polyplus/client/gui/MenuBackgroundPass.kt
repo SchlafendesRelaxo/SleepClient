@@ -24,9 +24,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 
 private const val GLOW_STEPS = 12
 
-private val PanoramaBlackFlat = Color(0xFF11171C)
-private val PanoramaBlackGradient = Color(0xFF10161B)
-private val PanoramaGlowBlue = Color(0xFF1878F1)
+private val PanoramaBlackFlat = Color(0xFF100D17)
+private val PanoramaBlackGradient = Color(0xFF0D0B13)
+private val PanoramaGlowBlue = Color(0xFFA020F0)
 
 private class GlowSpot(
     val ax: Float,

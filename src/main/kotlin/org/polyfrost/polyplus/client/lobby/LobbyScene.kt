@@ -591,7 +591,6 @@ object LobbyScene {
     }
 
     fun depart(done: () -> Unit) {
-        LobbyAmbience.depart()
         if (live == null) {
             done()
             return
@@ -604,7 +603,6 @@ object LobbyScene {
     }
 
     fun arrive() {
-        LobbyAmbience.arrive()
         skyReturn = skyNanos != 0L
         if (skyReturn) {
             returnPush = 0.0
@@ -678,7 +676,6 @@ object LobbyScene {
     @JvmStatic
     fun onFrameStart() {
         StartupOverlay.onFrame()
-        LobbyAmbience.onFrame()
         if (saved != null) {
             LOBBY_LOGGER.warn("Lobby swap was left open, restoring the client")
             end()
@@ -2308,7 +2305,6 @@ object LobbyScene {
     @JvmStatic
     fun onClientTick() {
         SparkCompat.warm()
-        LobbyAmbience.tick()
         watchLoading()
         val scene = shown() ?: return
         guarded("tick") { tickScene(scene) }

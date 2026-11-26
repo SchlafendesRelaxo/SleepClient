@@ -3,11 +3,9 @@
 package org.polyfrost.polyplus.client.gui.lobbyshell
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.geometry.Rect
 //? if > 1.8.9
 import com.mojang.realmsclient.RealmsMainScreen
 import net.minecraft.client.Minecraft
@@ -23,7 +21,6 @@ import org.polyfrost.oneconfig.api.ui.v1.ExperimentalOneConfigUiApi
 import org.polyfrost.oneconfig.api.ui.v1.a11y.A11y
 import org.polyfrost.compose.host.BackStack
 import org.polyfrost.oneconfig.api.ui.v1.keybind.TextInputFocus
-import org.polyfrost.polyplus.client.PolyPlusLobbyConfig
 import org.polyfrost.polyplus.client.PolyPlusMainMenuConfig
 import org.polyfrost.polyplus.client.PolyPlusRecentServers
 import org.polyfrost.polyplus.client.featured.FeaturedServers
@@ -42,7 +39,6 @@ import org.polyfrost.polyplus.client.lobby.LobbyFraming
 import org.polyfrost.polyplus.client.lobby.LobbyScene
 import org.polyfrost.polyplus.client.lobby.LobbyWardrobe
 import org.polyfrost.polyplus.client.utils.ClientPlatform
-import org.polyfrost.polyplus.privacy.PrivacyConsent
 import org.polyfrost.polyplus.client.utils.AnimationActivity
 import org.polyfrost.polyplus.compat.replay.ReplayEntry
 import java.nio.file.Path
@@ -53,7 +49,6 @@ internal enum class LobbyPage(val frosted: Boolean) {
     Multiplayer(true),
     Singleplayer(true),
     Replays(true),
-    Marketplace(true),
     Social(true),
     Stats(true),
     News(true),
@@ -61,7 +56,11 @@ internal enum class LobbyPage(val frosted: Boolean) {
     ;
 
     val spokenName: String
-        get() = if (this == Home) "Play" else name
+        get() = when (this) {
+            Home -> "Play"
+            Wardrobe -> "Skins"
+            else -> name
+        }
 
     val hidden: Boolean
         get() = when (this) {
@@ -115,8 +114,6 @@ internal class LobbyShell(private val screen: Screen, firstPage: LobbyPage) : So
     private var selectedReplay by mutableStateOf(choice.replay)
     var setup by mutableStateOf(onboardingPending())
         private set
-    var tour by mutableStateOf<LobbyTour?>(null)
-    val anchors = mutableStateMapOf<TourAnchor, Rect>()
     var accountsOpen by mutableStateOf(false)
         private set
     var accountsPanel by mutableStateOf<AccountsPanelState?>(null)
@@ -125,7 +122,7 @@ internal class LobbyShell(private val screen: Screen, firstPage: LobbyPage) : So
     private var profileId = ClientPlatform.localPlayerUuid()
 
     fun open() {
-        if (setup && !onboardingPending()) finishSetup() else if (!setup) startTour()
+        if (setup && !onboardingPending()) finishSetup()
         LobbyFraming.onboarding = setup
         LobbyScene.arrive()
         HostWorldManager.worldOpener = ::depart
@@ -153,25 +150,6 @@ internal class LobbyShell(private val screen: Screen, firstPage: LobbyPage) : So
     fun finishSetup() {
         setup = false
         LobbyFraming.onboarding = false
-        startTour()
-    }
-
-    private fun startTour() {
-        if (PolyPlusLobbyConfig.tourSeen || tour != null) return
-        tour = LobbyTour(PrivacyConsent.allowsOnlineServices())
-    }
-
-    fun replayTour() {
-        if (setup) return
-        show(LobbyPage.Home)
-        tour = LobbyTour(PrivacyConsent.allowsOnlineServices())
-    }
-
-    fun endTour() {
-        tour = null
-        if (PolyPlusLobbyConfig.tourSeen) return
-        PolyPlusLobbyConfig.tourSeen = true
-        PolyPlusLobbyConfig.save()
     }
 
     fun skipIntro(): Boolean = (!setup || LobbyScene.overlayAlpha <= 0f) && !LobbyWardrobe.open && LobbyScene.skipIntro()
@@ -194,12 +172,6 @@ internal class LobbyShell(private val screen: Screen, firstPage: LobbyPage) : So
         if (setup) return
         show(LobbyPage.Home)
         customize.open(page)
-    }
-
-    fun openAmbience() {
-        if (setup) return
-        show(LobbyPage.Home)
-        customize.focusAmbience()
     }
 
     fun openAccounts() {
@@ -407,14 +379,9 @@ internal class LobbyShell(private val screen: Screen, firstPage: LobbyPage) : So
 
     private fun covered(): Boolean = accountsOpen || BackStack.hasOpen || hostWorldId != null || editing != null || deleting != null || directOpen
 
-    fun calm(): Boolean = !setup && tour == null && !customizeOpen && !covered() && !SocialPageState.dialogOpen && !TextInputFocus.isTyping
+    fun calm(): Boolean = !setup && !customizeOpen && !covered() && !SocialPageState.dialogOpen && !TextInputFocus.isTyping
 
     fun openSocial(): Boolean {
-        tour?.let { current ->
-            if (TextInputFocus.isTyping) return false
-            if (!current.next()) endTour()
-            return true
-        }
         if (setup || page == LobbyPage.Social || covered() || TextInputFocus.isTyping) return false
         show(LobbyPage.Social)
         return true

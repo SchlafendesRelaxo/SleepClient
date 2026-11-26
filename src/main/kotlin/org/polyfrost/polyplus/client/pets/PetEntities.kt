@@ -29,7 +29,7 @@ object PetEntities {
     private val PET_ENTITY_TYPE_KEY: ResourceKey<EntityType<*>> =
         ResourceKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(PolyPlusConstants.ID, "pet"))
 
-    // registered entity types get synced to joining players, who then can't join a Poly+ user's world without Poly+
+    // registered entity types get synced to joining players, who then can't join a SleepClient user's world without SleepClient
     // EntityType's constructor always requests an intrusive holder, so hand it a throwaway map that never gets registered
     private inline fun <T : Entity> createUnregistered(
         key: ResourceKey<EntityType<*>>,

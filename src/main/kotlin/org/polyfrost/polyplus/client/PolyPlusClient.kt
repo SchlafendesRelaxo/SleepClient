@@ -1,6 +1,5 @@
 package org.polyfrost.polyplus.client
 
-import org.polyfrost.polyplus.client.lobby.StartupSounds
 import org.polyfrost.polyplus.libs.ktor.client.HttpClient
 import org.polyfrost.polyplus.libs.ktor.client.engine.cio.CIO
 import org.polyfrost.polyplus.libs.ktor.client.plugins.ClientRequestException
@@ -77,7 +76,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.polyfrost.polyplus.client.gui.PolyPlusOneConfigIntegration
 import org.polyfrost.polyplus.client.gui.registerPolyPlusPixelIcons
-import org.polyfrost.polyplus.client.gui.screens.settings.OneClientSettingsPages
+import org.polyfrost.polyplus.client.gui.screens.settings.SleepClientSettingsPages
 import org.polyfrost.polyplus.client.gui.screens.settings.ArgentumSettingsPages
 import org.polyfrost.polyplus.client.gui.screens.settings.SodiumSettingsPages
 import org.polyfrost.polyplus.client.gui.widgets.ShellWidgetRegistry
@@ -98,7 +97,7 @@ object PolyPlusClient {
     private val cosmeticsRefreshQueued = AtomicBoolean(false)
 
     private val EXCEPTION_HANDLER = CoroutineExceptionHandler { _, throwable ->
-        LOGGER.error("Uncaught exception in PolyPlus coroutine", throwable)
+        LOGGER.error("Uncaught exception in SleepClient coroutine", throwable)
     }
 
     @JvmField val SCOPE = CoroutineScope(SupervisorJob() + Dispatchers.Default + EXCEPTION_HANDLER)
@@ -162,7 +161,7 @@ object PolyPlusClient {
 
     private inline fun step(name: String, block: () -> Unit) {
         runCatching(block).onFailure { error ->
-            LOGGER.error("PolyPlus init step '{}' failed; continuing without it", name, error)
+            LOGGER.error("SleepClient init step '{}' failed; continuing without it", name, error)
         }
     }
 
@@ -176,7 +175,6 @@ object PolyPlusClient {
         step("config preload") { PolyPlusConfig.preload() }
         step("main menu config preload") { PolyPlusMainMenuConfig.preload() }
         step("screens config preload") { PolyPlusScreensConfig.preload() }
-        step("startup sounds") { StartupSounds.prepare() }
         step("cosmetics config preload") { PolyPlusCosmeticsConfig.preload() }
         step("pylon raw input") { PylonRawInput.initialize() }
         step("privacy enforcement") { PrivacyEnforcement.syncConfig() }
@@ -191,7 +189,7 @@ object PolyPlusClient {
         step("oneconfig ui") { PolyPlusOneConfigIntegration.register() }
         step("sodium settings") { SodiumSettingsPages.register() }
         step("argentum settings") { ArgentumSettingsPages.register() }
-        step("oneclient settings") { OneClientSettingsPages.register() }
+        step("SleepClient settings") { SleepClientSettingsPages.register() }
         step("widgets") { ShellWidgetRegistry.registerBuiltIns() }
         step("default mod order") { DefaultModOrder.initialize() }
         step("advanced mod cards") { AdvancedModCards.initialize() }
@@ -208,7 +206,7 @@ object PolyPlusClient {
         step("session refresh") { SessionRefresh.register() }
         step("featured servers") { FeaturedServers.warmUp() }
         step("status page") { StatusPage.start() }
-        step("oneclient server api") { OneClientServerApi.initialize() }
+        step("SleepClient server API") { OneClientServerApi.initialize() }
         //? if wwaypoints
         step("wwaypoints compat") { WWaypointsCompat.initialize() }
 
@@ -231,7 +229,7 @@ object PolyPlusClient {
 
         step("websocket") {
             PolyConnection.initialize {
-                LOGGER.info("Connected to PolyPlus WebSocket server.")
+                LOGGER.info("Connected to SleepClient WebSocket server.")
 
                 SCOPE.launch {
                     PolyConnection.sendPacket(ServerboundPacket.GetActiveCosmetics(ClientPlatform.localPlayerUuid().toString()))
@@ -264,7 +262,7 @@ object PolyPlusClient {
     // Full reset of auth caches and API data
     fun refresh() {
         if (!PrivacyConsent.allowsOnlineServices()) return
-        LOGGER.info("Refreshing PolyPlus Client...")
+        LOGGER.info("Refreshing SleepClient...")
 
         SCOPE.launch {
             runSuspendCatching { PolyAuthorization.reset() }

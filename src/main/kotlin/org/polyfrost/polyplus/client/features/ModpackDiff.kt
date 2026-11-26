@@ -21,12 +21,12 @@ import java.util.HexFormat
 import org.polyfrost.polyplus.client.utils.runSuspendCatching
 
 object ModpackDiff {
-    private val logger = LogManager.getLogger("PolyPlus/ModpackDiff")
+    private val logger = LogManager.getLogger("SleepClient/ModpackDiff")
 
     // Modrinth slug to display name - on a tie, earlier packs win
     private val PACKS = listOf(
-        "oneclient-modpack" to "OneClient modpack",
-        "oneclient-skyblock" to "OneClient SkyBlock modpack",
+        "oneclient-modpack" to "SleepClient modpack",
+        "oneclient-skyblock" to "SleepClient SkyBlock modpack",
     )
 
     private const val MAX_VERSIONS_CHECKED = 10
@@ -56,7 +56,7 @@ object ModpackDiff {
 
     fun logAsync() {
         PolyPlusClient.SCOPE.launch(Dispatchers.IO) {
-            runSuspendCatching { log() }.onFailure { logger.warn("Failed to compare mods against the OneClient modpack", it) }
+            runSuspendCatching { log() }.onFailure { logger.warn("Failed to compare mods against the SleepClient modpack", it) }
         }
     }
 
@@ -88,7 +88,7 @@ object ModpackDiff {
         }
 
         if (best == null) {
-            logger.info("No OneClient modpack found for Minecraft {}", mcVersion)
+            logger.info("No SleepClient modpack found for Minecraft {}", mcVersion)
             return
         }
         val (slug, pack, version, diff) = best

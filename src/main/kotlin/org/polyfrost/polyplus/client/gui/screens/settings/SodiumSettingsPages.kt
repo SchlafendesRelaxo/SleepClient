@@ -146,7 +146,7 @@ private fun SodiumPage(ref: SodiumPageRef, title: String, parent: () -> Screen?)
     }
 }
 
-// Sodium replaces the vanilla video page, and vanilla keeps FOV on its main options screen, which PolyPlus has no equivalent of
+// Sodium replaces the vanilla video page, and vanilla keeps FOV on its main options screen, which SleepClient has no equivalent of
 private fun fovGroup(): SodiumGroup = SodiumGroup(null, listOfNotNull(SettingsOptionRows.row(Minecraft.getInstance().options.fov(), wide = true, hint = "Applies immediately, without Apply.")), emptyList())
 
 @Composable

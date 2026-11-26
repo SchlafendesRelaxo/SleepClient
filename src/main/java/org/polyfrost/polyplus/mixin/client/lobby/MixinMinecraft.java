@@ -1,15 +1,11 @@
 package org.polyfrost.polyplus.mixin.client.lobby;
 
 //? if > 1.8.9 {
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.main.GameConfig;
 import net.minecraft.client.multiplayer.ClientLevel;
 import org.polyfrost.polyplus.client.lobby.LobbyCapture;
 import org.polyfrost.polyplus.client.lobby.LobbyScene;
-import org.polyfrost.polyplus.client.lobby.StartupOverlay;
-import org.polyfrost.polyplus.client.gui.pausescreen.PauseRouter;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,23 +13,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
 public class MixinMinecraft {
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void polyplus$noteQuickPlay(GameConfig config, CallbackInfo ci) {
-        StartupOverlay.noteQuickPlay(config.quickPlay.isEnabled());
-    }
-
     @Inject(method = "runTick", at = @At("HEAD"))
     private void polyplus$stepLobbyClock(boolean advanceGameTime, CallbackInfo ci) {
         LobbyScene.onFrameStart();
-    }
-
-    //? if >= 26.2 {
-    @ModifyExpressionValue(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;isPausing()Z"))
-    //?} else {
-    /*@ModifyExpressionValue(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;isPauseScreen()Z"))
-    *///?}
-    private boolean polyplus$holdPause(boolean original) {
-        return original || PauseRouter.holdsPause();
     }
 
     @Inject(method = "tick", at = @At("RETURN"))

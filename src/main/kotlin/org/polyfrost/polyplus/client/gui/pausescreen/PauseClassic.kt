@@ -218,7 +218,6 @@ private fun ClassicExtras(screen: OneClientPauseScreen, layout: ClassicLayout) {
         if (screen.online) {
             ExtraButton(asset("message-chat-circle"), "Social", badge = socialDotLabel(groups.any { it.unread }, invites.isNotEmpty()), onClick = screen::openSocial)
         }
-        ExtraButton(asset("diamond-01"), "Wardrobe", onClick = screen::openWardrobe)
         if (screen.canWorldOptions && worldInGrid) ExtraButton(asset("globe-01"), "World options", onClick = screen::openWorldOptions)
         if (screen.canHost && !hostInGrid) ExtraButton(asset("log-in-04"), "Host", onClick = screen::openHost)
         if (layout.help.isNotEmpty()) {

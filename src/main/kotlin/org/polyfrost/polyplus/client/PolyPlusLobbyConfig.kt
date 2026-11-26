@@ -6,22 +6,19 @@ import org.polyfrost.oneconfig.api.config.v1.annotations.Dropdown
 import org.polyfrost.oneconfig.api.config.v1.annotations.Include
 import org.polyfrost.oneconfig.api.config.v1.annotations.Slider
 import org.polyfrost.oneconfig.api.config.v1.annotations.Switch
-import org.polyfrost.oneconfig.internal.OneConfigConfig
 import org.polyfrost.polyplus.PolyPlusConstants
 import org.polyfrost.polyplus.client.gui.widgets.WidgetMigration
 import org.polyfrost.polyplus.client.lobby.LobbyCaptureFrequency
 import org.polyfrost.polyplus.client.lobby.LobbyCaptureView
-import org.polyfrost.polyplus.client.lobby.LobbyMusic
 import org.polyfrost.polyplus.client.lobby.LobbyReveal
 import org.polyfrost.polyplus.client.lobby.LobbySceneStore
 import org.polyfrost.polyplus.client.lobby.LobbyTime
-import org.polyfrost.polyplus.compat.Mods
 import org.polyfrost.polyplus.compat.SparkCompat
 import kotlin.math.roundToInt
 
 object PolyPlusLobbyConfig : Config(
     "${PolyPlusConstants.ID}-lobby.json",
-    "Lobby (OneClient)",
+    "Lobby",
     Category.OTHER,
 ) {
     @Transient
@@ -32,9 +29,6 @@ object PolyPlusLobbyConfig : Config(
 
     @JvmStatic @Include
     var serverListView = false
-
-    @JvmStatic @Include
-    var tourSeen = false
 
     @JvmStatic
     @Dropdown(
@@ -58,48 +52,6 @@ object PolyPlusLobbyConfig : Config(
         description = "Darken the edges of the lobby background.",
     )
     var lobbyVignette = true
-
-    @JvmStatic
-    @Dropdown(
-        title = "Lobby Music",
-        description = "Choose the music that plays in the lobby.",
-        options = ["Match scene", "Day", "Night", "Sunset", "Aurora", "Home", "Cave", "Nether", "The End", "Minecraft music", "Off"],
-    )
-    var lobbyMusic: LobbyMusic = LobbyMusic.MATCH_SCENE
-
-    @JvmStatic
-    @Slider(
-        title = "Lobby Music Volume",
-        description = "How loud the lobby music plays, in percent.",
-        min = 0f,
-        max = 100f,
-        step = 5f,
-    )
-    var lobbyMusicVolume = 100f
-
-    @JvmStatic @Include
-    var lobbyMusicVolumeInherited = false
-
-    @JvmStatic
-    @Switch(
-        title = "Mute Lobby Music",
-        description = "Silence the lobby music and OneConfig's ambience without changing your track or volume.",
-    )
-    var lobbyMusicMuted = false
-
-    @JvmStatic
-    @Switch(
-        title = "Mute When Unfocused",
-        description = "Fade out the lobby music while the game window isn't focused.",
-    )
-    var muteLobbyMusicUnfocused = false
-
-    @JvmStatic
-    @Switch(
-        title = "Mute During Media",
-        description = "Fade out the lobby music and OneConfig's ambience while music or a video plays on your computer.",
-    )
-    var muteAmbienceDuringMedia = true
 
     @JvmStatic
     @Switch(
@@ -164,18 +116,7 @@ object PolyPlusLobbyConfig : Config(
         migrateWidgets()
         LobbySceneStore.captureLimit = sceneCaptureLimit.roundToInt()
         addCallback("sceneCaptureLimit") { LobbySceneStore.captureLimit = sceneCaptureLimit.roundToInt() }
-        hideIf("lobbyMusicVolume") { lobbyMusic == LobbyMusic.OFF || lobbyMusic == LobbyMusic.MINECRAFT }
-        hideIf("muteLobbyMusicUnfocused") { lobbyMusic == LobbyMusic.OFF || lobbyMusic == LobbyMusic.MINECRAFT }
         hideIf("quitClickTwice") { quitWithoutConfirmation }
-        hideIf("muteAmbienceDuringMedia") { !Mods.evergreenHud }
-        inheritMusicVolume()
-    }
-
-    fun inheritMusicVolume() {
-        if (lobbyMusicVolumeInherited || OneConfigConfig.INSTANCE?.getTree() == null) return
-        lobbyMusicVolume = if (OneConfigConfig.enableUIAmbience) OneConfigConfig.uiAmbienceVolume.coerceIn(0f, 100f) else 0f
-        lobbyMusicVolumeInherited = true
-        save()
     }
 
     private fun migrateFromSplitConfigs() {

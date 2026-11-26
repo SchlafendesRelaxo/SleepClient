@@ -50,12 +50,7 @@ public class MixinPauseScreen {
         )
     )
     private Component polyplus$hostWorldLabel(Component original) {
-        // on a server this button is vanilla's disabled LAN entry; the host flow only ever opens the local world
-        return Minecraft.getInstance().hasSingleplayerServer()
-            && PolyPlusPauseConfig.getReplacePauseLanButton()
-            && PrivacyConsent.allowsOnlineServices()
-            ? Component.translatable("polyplus.hostWorld")
-            : original;
+        return original;
     }
     *///?} elif = 1.8.9 {
     /*@Inject(method = "init", at = @At("TAIL"))

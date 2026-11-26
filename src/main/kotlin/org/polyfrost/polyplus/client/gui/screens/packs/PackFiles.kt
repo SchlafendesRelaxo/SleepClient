@@ -22,6 +22,7 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.util.ArrayDeque
 import java.util.Comparator
 import java.util.Locale
 import java.util.concurrent.CompletableFuture
@@ -147,11 +148,34 @@ internal object PackFiles {
         }
     }
 
-    private fun anchored(path: Path): Path = runCatching {
+    private fun anchored(path: Path): Path {
         val absolute = path.toAbsolutePath()
-        val name = absolute.fileName.toString()
-        if (name == "." || name == "..") absolute.toRealPath() else absolute.parent.toRealPath().resolve(absolute.fileName)
-    }.getOrElse { path.toAbsolutePath().normalize() }
+        val remaining = ArrayDeque<Path>()
+        absolute.forEach(remaining::addLast)
+        var resolved = absolute.root ?: throw IOException("Path has no root: $absolute")
+        var links = 0
+
+        while (remaining.isNotEmpty()) {
+            val component = remaining.removeFirst().toString()
+            when (component) {
+                "", "." -> Unit
+                ".." -> resolved = resolved.parent ?: resolved
+                else -> {
+                    val next = resolved.resolve(component)
+                    if (remaining.isNotEmpty() && Files.isSymbolicLink(next)) {
+                        if (++links > PackFolders.MAX_LINK_HOPS) throw IOException("Too many symbolic links in $path")
+                        val target = Files.readSymbolicLink(next)
+                        val targetComponents = target.toList()
+                        if (target.isAbsolute) resolved = target.root ?: throw IOException("Symbolic link has no root: $target")
+                        for (index in targetComponents.indices.reversed()) remaining.addFirst(targetComponents[index])
+                    } else {
+                        resolved = next
+                    }
+                }
+            }
+        }
+        return resolved
+    }
 
     private fun linkHops(source: Path): List<Path> {
         val hops = ArrayList<Path>()

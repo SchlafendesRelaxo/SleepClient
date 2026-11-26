@@ -28,8 +28,8 @@ import kotlin.math.sin
 
 internal const val SOCIAL_ASSETS = "assets/polyplus/mainmenu/"
 
-internal val SocialScrim = Color(0xB3000000)
-internal val SocialWindowScrim = Color(0x40000000)
+internal val SocialScrim = Color(0xB3100D17)
+internal val SocialWindowScrim = Color(0x60100D17)
 internal val SocialDangerColor = Color(0xFFFF5A5A)
 internal val SocialSuccessColor = Color(0xFF239A60)
 internal val KitDangerColor = Color(0xFFE35B5B)

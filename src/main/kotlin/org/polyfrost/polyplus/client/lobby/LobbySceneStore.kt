@@ -148,7 +148,7 @@ object LobbySceneStore {
     private var loaded = false
 
     private val writer = Executors.newSingleThreadExecutor { task ->
-        Thread(task, "PolyPlus lobby store").apply { isDaemon = true }
+        Thread(task, "SleepClient lobby store").apply { isDaemon = true }
     }
 
     val scenes: List<LobbySceneEntry>
@@ -260,7 +260,7 @@ object LobbySceneStore {
 
     fun worldName(entry: LobbySceneEntry): String = when {
         entry.worldName.isNotBlank() -> entry.worldName
-        entry.bundled -> "Polyfrost"
+        entry.bundled -> "SleepClient"
         !entry.renamed && entry.label.isNotBlank() -> entry.label
         else -> entry.world.substringAfter(':')
     }

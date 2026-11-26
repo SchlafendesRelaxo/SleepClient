@@ -39,7 +39,7 @@ import org.polyfrost.polyplus.client.network.p2p.P2PSessionManager
 *///?}
 
 object HostWorldManager {
-    private val LOGGER = LogManager.getLogger("PolyPlus/HostWorld")
+    private val LOGGER = LogManager.getLogger("SleepClient/HostWorld")
 
     val clientVersionName: String by lazy {
         //? if = 1.8.9 {

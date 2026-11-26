@@ -6,7 +6,7 @@ import org.polyfrost.polyplus.client.PolyPlusConfig
 import org.polyfrost.polyplus.privacy.PrivacyConsent
 
 class OnlineServicesDisabledException(url: String) : IllegalStateException(
-    "PolyPlus online features are disabled (Terms of Service / Privacy Policy not accepted): $url",
+    "SleepClient online features are disabled (Terms of Service / Privacy Policy not accepted): $url",
 ) {
     override fun fillInStackTrace(): Throwable = this
 }
@@ -22,7 +22,7 @@ fun isPolyfrostHost(host: String, backendHost: String?): Boolean {
 private fun backendHost(): String? =
     runCatching { Url(PolyPlusConfig.apiUrl.url).host }.getOrNull()
 
-val PrivacyGate = createClientPlugin("PolyPlusPrivacyGate") {
+val PrivacyGate = createClientPlugin("SleepClientPrivacyGate") {
     onRequest { request, _ ->
         if (!isPolyfrostHost(request.url.host, backendHost())) return@onRequest
         if (!PrivacyConsent.allowsOnlineServices()) {

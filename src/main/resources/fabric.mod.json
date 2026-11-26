@@ -4,9 +4,9 @@
     "version": "${mod_version}",
     "name": "${mod_name}",
     "icon": "icon.png",
-    "description": "${mod_description}",
+    "description": "SleepClient - Premium Custom Minecraft Client",
     "authors": [
-        "Polyfrost"
+        "SleepCodes"
     ],
     "environment": "client",
     "entrypoints": {
@@ -30,7 +30,7 @@
         "polyplus-early": "org.polyfrost.polyplus.compat.EarlyConfigAdapter"
     },
     "mixins": [
-        "mixins.${mod_id}.json"
+        "mixins.sleepclient.json"
     ],
     "depends": {
         "minecraft": "${minor_mc_version}",
@@ -47,5 +47,18 @@
     },
     "conflicts": {
         "rrls": "*"
+    },
+    "contact": {
+        "homepage": "https://github.com/SchlafendesRelaxo/SleepClient",
+        "sources": "https://github.com/SchlafendesRelaxo/SleepClient",
+        "issues": "https://github.com/SchlafendesRelaxo/SleepClient/issues"
+    },
+    "provides": [
+        "polyplus"
+    ],
+    "custom": {
+        "sleepclient": {
+            "loader": "${mod_loader}"
+        }
     }
 }

@@ -32,7 +32,7 @@ import org.polyfrost.polyplus.privacy.LauncherEnvironment
 import java.nio.file.Files
 import java.nio.file.Path
 
-object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConstants.NAME} (OneClient)", Category.OTHER) {
+object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", PolyPlusConstants.NAME, Category.OTHER) {
     @Transient
     private val LOGGER = LogManager.getLogger()
 
@@ -94,16 +94,9 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     @JvmStatic
     @Switch(
         title = "Problematic Mod Warnings",
-        description = "Warn on startup when an installed mod is on OneClient's list of mods known to cause crashes or conflicts.",
+        description = "Warn on startup when an installed mod is on SleepClient's list of mods known to cause crashes or conflicts.",
     )
     var badModWarnings = true
-
-    @JvmStatic
-    @Switch(
-        title = "OneClient Startup Screen",
-        description = "Show OneClient's loading screen and first launch card when the game starts. Turn this off to use Minecraft's own loading and accessibility screens.",
-    )
-    var brandedStartup = true
 
     @JvmStatic
     @Switch(
@@ -121,8 +114,8 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
 
     @JvmStatic
     @Switch(
-        title = "OneClient Section in OneConfig",
-        description = "Show the OneClient pages in the OneConfig sidebar. These settings stay available from the Mods tab and Minecraft's options.",
+        title = "SleepClient sidebar section",
+        description = "Show SleepClient pages in the settings sidebar. These settings stay available from the Mods tab and Minecraft's options.",
     )
     var oneConfigSection = true
 
@@ -134,8 +127,8 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
 
     @JvmStatic
     @Switch(
-        title = "OneClient Watermark",
-        description = "Show the OneClient logo in inventories and options screens.",
+        title = "SleepClient Watermark",
+        description = "Show the SleepClient logo in inventories and options screens.",
         subcategory = "Watermark",
     )
     var watermarkEnabled = false
@@ -188,7 +181,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     @JvmStatic
     @Switch(
         title = "Use Accent Color",
-        description = "Draw the watermark in your OneConfig accent color.",
+        description = "Draw the watermark using the current accent color.",
         subcategory = "Watermark",
     )
     var watermarkAccentColor = true
@@ -291,8 +284,8 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
 
     @JvmStatic
     @Switch(
-        title = "PolyPlus User Indicators",
-        description = "Show a badge on the nametag and tab list of players who are using PolyPlus.",
+        title = "SleepClient User Indicators",
+        description = "Show a badge on the nametag and tab list of players who are using SleepClient.",
     )
     var showPolyPlusIndicator = true
 
@@ -449,7 +442,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     @JvmStatic
     @Switch(
         title = "Accept Terms of Service & Privacy Policy",
-        description = "Required for crash reporting and online features (cosmetics, client indicator, etc.). ",
+        description = "Required for crash reporting and online features (skin changes, client indicators, etc.). ",
         category = "Privacy",
     )
     var acceptedLegalTerms = true
@@ -457,7 +450,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     @Keybind(
         title = "Socials Menu",
         subcategory = "Keybinds",
-        description = "Open the PolyPlus Socials menu",
+        description = "Open the SleepClient Socials menu",
     )
     var socialsMenuKeybind = OneConfigKeybind(intArrayOf(InputConstants.KEY_GRAVE), null, KeyModifiers.SHIFT, 0L) { state ->
         if (state) {
@@ -469,7 +462,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     @Keybind(
         title = "Emote Wheel",
         subcategory = "Keybinds",
-        description = "Open the PolyPlus Emote Wheel",
+        description = "Open the SleepClient Emote Wheel",
     )
     var emoteWheelKeybind = OneConfigKeybind(null, null, KeyModifiers.NONE, 0L) { state ->
         EmoteWheelKeybind.onKeybindState(state)
@@ -477,9 +470,9 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     }
 
     @Keybind(
-        title = "Open Wardrobe",
+        title = "Change skin",
         subcategory = "Keybinds",
-        description = "Open the PolyPlus wardrobe",
+        description = "Open the SleepClient skin changer",
     )
     var wardrobeKeybind = OneConfigKeybind(null, null, KeyModifiers.NONE, 0L) { state ->
         if (state) {
@@ -534,7 +527,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
         true
     }
 
-    @Dropdown(title = "API URL", description = "The URL used for the PolyPlus API. Only change if you know what you're doing.")
+    @Dropdown(title = "API URL", description = "The URL used for the SleepClient API. Only change if you know what you're doing.")
     var apiUrl: BackendUrl = BackendUrl.PRODUCTION
         get() = when {
             PolyPlusConstants.IS_DEV_ENV -> field
@@ -545,7 +538,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
     init {
         hideIf("apiUrl") { !PolyPlusConstants.IS_DEV_ENV }
 
-        hideIf("watermarkEnabled") { !LauncherEnvironment.isOneClient }
+        hideIf("watermarkEnabled") { !LauncherEnvironment.isSleepClient }
         for (option in listOf("watermarkPosition", "watermarkScale", "watermarkAccentColor")) {
             hideIf(option) { !watermarkShown() }
         }
@@ -585,7 +578,7 @@ object PolyPlusConfig : Config("${PolyPlusConstants.ID}.json", "${PolyPlusConsta
         }
     }
 
-    private fun watermarkShown(): Boolean = LauncherEnvironment.isOneClient && watermarkEnabled
+    private fun watermarkShown(): Boolean = LauncherEnvironment.isSleepClient && watermarkEnabled
 }
 
 /** Folds the pre-split polyplus.json into one of the configs made out of it. */

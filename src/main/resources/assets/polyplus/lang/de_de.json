@@ -1,0 +1,21 @@
+{
+    "polyplus.hostWorld": "Welt hosten",
+    "polyplus.mainmenu.switchToSleepClient": "SleepClient Menü",
+    "polyplus.options.sleepclient": "SleepClient-Einstellungen",
+    "polyplus.featured.sponsored": "Sponsored",
+    "polyplus.featured.restore": "Restore",
+    "polyplus.reconnect": "Wiederverbinden",
+    "polyplus.serverFolder": "Ordner",
+    "polyplus.serverFolder.hint": "Folder (optional)",
+    "polyplus.serverFolder.pick": "Pick an existing folder",
+    "polyplus.serverSort": "Sort: %s",
+    "polyplus.serverSort.custom": "Custom",
+    "polyplus.mmc.debugifyNote": "SleepClient-Hinweis: Die potenziell bannbaren Funktionen von Debugify werden automatisch deaktiviert, damit du sicher weiterspielen kannst.",
+    "polyplus.session.refresh": "Sitzung aktualisieren",
+    "polyplus.session.refreshing": "Sitzung wird aktualisiert...",
+    "polyplus.session.reconnecting": "Verbindung wird hergestellt...",
+    "polyplus.session.refreshFailed": "Refresh failed - click to retry",
+    "polyplus.page.wardrobe": "Skins",
+    "polyplus.sodium.options.view_bobbing.tooltip": "If enabled, the player's view will sway and bob when moving around. Players who experience motion sickness while playing may benefit from disabling this.",
+    "sleepclient.pagegroup.sleepclient": "SleepClient"
+}

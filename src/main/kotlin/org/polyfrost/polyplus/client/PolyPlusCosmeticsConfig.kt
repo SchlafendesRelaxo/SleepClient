@@ -14,7 +14,7 @@ import java.util.UUID
 
 object PolyPlusCosmeticsConfig : Config(
     "${PolyPlusConstants.ID}-cosmetics.json",
-    "Cosmetics (OneClient)",
+    "Cosmetics",
     Category.OTHER,
 ) {
     @Transient
@@ -39,7 +39,7 @@ object PolyPlusCosmeticsConfig : Config(
 
     @JvmStatic
     @Switch(
-        title = "Force PolyPlus Capes",
+        title = "Force SleepClient Capes",
         description = "Show the capes picked in the wardrobe even when another mod sets its own cape.",
     )
     var forcePolyPlusCapes = false

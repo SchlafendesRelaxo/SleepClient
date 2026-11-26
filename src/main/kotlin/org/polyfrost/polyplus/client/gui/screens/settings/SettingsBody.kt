@@ -281,19 +281,19 @@ private fun builtInEntries(): List<SettingsEntry> {
 
 private fun trailingEntries(): List<SettingsEntry> = listOf(
     SettingsEntry(
-        "oneclient:mods",
+        "sleepclient:mods",
         "Mods",
         "dots-grid",
-        SettingsOwner.OneClient,
-        SettingsGroup.OneClient,
+        SettingsOwner.SleepClient,
+        SettingsGroup.SleepClient,
         external = { host -> SettingsMemory.returnOnClose(host) { PolyPlusOneConfigIntegration.openMods() } },
     ),
     SettingsEntry(
-        "oneclient:more-from-mods",
+        "sleepclient:more-from-mods",
         SettingsCategory.Mods.label,
         SettingsCategory.Mods.icon,
-        SettingsOwner.OneClient,
-        SettingsGroup.OneClient,
+        SettingsOwner.SleepClient,
+        SettingsGroup.SleepClient,
         external = { host -> host?.let { SettingsPlatform.open(SettingsCategory.Mods, it) } },
         category = SettingsCategory.Mods,
     ),
@@ -319,7 +319,7 @@ private fun SettingsRail(entries: List<SettingsEntry>, selected: String, activat
 internal val SettingsGroup.title: String
     get() = when (this) {
         SettingsGroup.Game -> "Game"
-        SettingsGroup.OneClient -> "OneClient"
+        SettingsGroup.SleepClient -> "SleepClient"
     }
 
 @Composable

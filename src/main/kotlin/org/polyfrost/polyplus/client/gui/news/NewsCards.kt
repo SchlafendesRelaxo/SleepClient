@@ -28,7 +28,7 @@ import org.polyfrost.polyplus.client.gui.ThemedIcon
 import org.polyfrost.polyplus.client.gui.rememberRemoteImage
 import org.polyfrost.oneconfig.api.ui.v1.components.Text
 
-private const val BRAND_MARK = "assets/polyplus/brand/oneclient.svg"
+private const val BRAND_MARK = "assets/polyplus/brand/sleepclient.svg"
 private const val FALLBACK_TOP_ALPHA = 0.38f
 private const val FALLBACK_BOTTOM_ALPHA = 0.12f
 private const val MARK_ALPHA = 0.5f

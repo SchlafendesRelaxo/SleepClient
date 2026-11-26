@@ -62,20 +62,26 @@ internal fun WardrobeShell(
     onCheckout: () -> Unit,
     polyPlusAvailable: Boolean = true,
     onConsent: () -> Unit = {},
+    onlySkins: Boolean = false,
 ) {
     val store = remember { WardrobeStoreData() }
     var storeReloadKey by remember { mutableIntStateOf(0) }
     LaunchedEffect(storeReloadKey) {
-        if (polyPlusAvailable) {
+        if (polyPlusAvailable && !onlySkins) {
             store.load()
         } else {
             store.loading = false
             store.featuredLoading = false
         }
     }
-    LaunchedEffect(Unit) { MojangCapeService.refreshIfNeeded() }
+    if (!onlySkins) LaunchedEffect(Unit) { MojangCapeService.refreshIfNeeded() }
 
-    val sections = if (polyPlusAvailable) WardrobeSection.entries else listOf(WardrobeSection.Cosmetics)
+    val sections = when {
+        onlySkins -> listOf(WardrobeSection.Skins)
+        polyPlusAvailable -> WardrobeSection.entries
+        else -> listOf(WardrobeSection.Cosmetics)
+    }
+    val storeEnabled = polyPlusAvailable && !onlySkins
     var section by remember { mutableStateOf(sections.first()) }
     val query = currentPageSearchQuery
     var sort by remember { mutableStateOf(WardrobeSort.Popular) }
@@ -102,7 +108,7 @@ internal fun WardrobeShell(
             WardrobeSection.Outfits -> OutfitLibrary.refreshIfNeeded(reload = true)
             WardrobeSection.Skins -> {
                 SkinLibrary.refreshIfNeeded()
-                OutfitLibrary.refreshIfNeeded()
+                if (!onlySkins) OutfitLibrary.refreshIfNeeded()
             }
             else -> Unit
         }
@@ -201,19 +207,19 @@ internal fun WardrobeShell(
                 sort = sort,
                 cartSize = cart.size,
                 showingHistory = showHistory,
-                storeEnabled = polyPlusAvailable,
+                storeEnabled = storeEnabled,
                 onCycleSort = { sort = WardrobeSort.entries[(sort.ordinal + 1) % WardrobeSort.entries.size] },
                 onToggleHistory = { showHistory = !showHistory },
                 onRefresh = {
                     onRefresh()
-                    storeReloadKey++
-                    if (polyPlusAvailable && section == WardrobeSection.Outfits) {
+                    if (!onlySkins) storeReloadKey++
+                    if (polyPlusAvailable && !onlySkins && section == WardrobeSection.Outfits) {
                         scope.launch { OutfitLibrary.refresh() }
                     }
                     if (polyPlusAvailable && section == WardrobeSection.Skins) {
                         scope.launch {
                             SkinLibrary.refresh()
-                            OutfitLibrary.refresh()
+                            if (!onlySkins) OutfitLibrary.refresh()
                         }
                     }
                 },
@@ -301,7 +307,7 @@ internal fun WardrobeShell(
         }
 
         Column(modifier = Modifier.width(320.dp).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (polyPlusAvailable) {
+            if (polyPlusAvailable && !onlySkins) {
                 PreviewModeToggle(
                     wheelMode = wheelMode,
                     onChange = { wheel ->
@@ -427,6 +433,32 @@ internal fun MinecraftCapesOnlyScreen(onConsent: () -> Unit = {}) {
         onCheckout = {},
         polyPlusAvailable = false,
         onConsent = onConsent,
+    )
+}
+
+@Composable
+internal fun SkinOnlyWardrobeScreen() {
+    var status by remember { mutableStateOf<String?>(null) }
+    WardrobeShell(
+        items = emptyList(),
+        ownedIds = emptySet(),
+        cart = emptyList(),
+        status = status,
+        variantPicks = emptyMap(),
+        auraColor = null,
+        historyReloadKey = 0,
+        onStatus = { status = it },
+        onRefresh = { PolyPlusClient.SCOPE.launch { SkinLibrary.refresh() } },
+        onPreviewAuraColor = {},
+        onSelectAuraColor = {},
+        onSelectVariant = { _, _ -> },
+        onEquip = {},
+        onAddToCart = { _, _ -> },
+        onBuyNow = { _, _ -> },
+        onBuyBundle = {},
+        onRemoveFromCart = {},
+        onCheckout = {},
+        onlySkins = true,
     )
 }
 

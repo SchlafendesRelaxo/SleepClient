@@ -12,11 +12,14 @@ import org.polyfrost.oneconfig.api.platform.v1.Platform
 import org.polyfrost.oneconfig.api.ui.v1.ExperimentalOneConfigUiApi
 import org.polyfrost.oneconfig.api.ui.v1.a11y.A11y
 import org.polyfrost.oneconfig.internal.ThemeConfig
-import org.polyfrost.polyplus.client.PolyPlusConfig
 import org.polyfrost.polyplus.client.gui.MainMenuReplacement
 import org.polyfrost.polyplus.client.gui.OnboardingKeys
 import org.polyfrost.polyplus.client.lobby.StartupOverlay
 import org.polyfrost.polyplus.client.utils.ClientPlatform
+
+//? if <= 1.8.9 {
+import org.polyfrost.polyplus.client.PolyPlusConfig
+//?}
 
 //? if > 1.8.9 {
 import com.mojang.text2speech.Narrator
@@ -234,8 +237,6 @@ internal object StartupAccessibility {
     }
 
     private fun useStandardStartup() {
-        PolyPlusConfig.brandedStartup = false
-        PolyPlusConfig.save()
         //? if > 1.8.9 {
         Narrator.getNarrator().clear()
         val parent = ClientPlatform.currentScreen()

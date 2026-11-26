@@ -85,7 +85,7 @@ class PolyPlusLobbyScreen internal constructor(firstPage: LobbyPage) : OneConfig
             *///?}
         }
         val enter = key == InputConstants.KEY_RETURN || key == InputConstants.KEY_NUMPADENTER
-        if (enter && (lobby.tour != null || !keyNavigated || !LobbyA11y.keyboardFocused()) && lobby.openSocial()) return true
+        if (enter && (!keyNavigated || !LobbyA11y.keyboardFocused()) && lobby.openSocial()) return true
         return super.handleKeyPressed(key, modifiers)
     }
 

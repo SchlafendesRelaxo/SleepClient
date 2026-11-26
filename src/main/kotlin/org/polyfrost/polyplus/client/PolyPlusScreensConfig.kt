@@ -7,13 +7,13 @@ import org.polyfrost.polyplus.PolyPlusConstants
 
 object PolyPlusScreensConfig : Config(
     "${PolyPlusConstants.ID}-screens.json",
-    "Screens (OneClient)",
+    "Screens",
     Category.OTHER,
 ) {
     @JvmStatic
     @Switch(
         title = "Settings",
-        description = "Uses OneClient's settings, controls and resource packs pages.",
+        description = "Uses SleepClient's settings, controls and resource packs pages.",
         subcategory = "Screens",
     )
     var customSettings = false
@@ -21,15 +21,15 @@ object PolyPlusScreensConfig : Config(
     @JvmStatic
     @Switch(
         title = "Create and edit world",
-        description = "Uses OneClient's screens for making and editing worlds.",
+        description = "Uses SleepClient's screens for making and editing worlds.",
         subcategory = "Screens",
     )
-    var customWorlds = true
+    var customWorlds = false
 
     @JvmStatic
     @Switch(
         title = "Connecting",
-        description = "Uses OneClient's screens while joining and leaving servers and worlds.",
+        description = "Uses SleepClient's screens while joining and leaving servers and worlds.",
         subcategory = "Screens",
     )
     var customConnecting = true
@@ -38,7 +38,7 @@ object PolyPlusScreensConfig : Config(
     //? if > 1.8.9 {
     @Switch(
         title = "Realms",
-        description = "Uses OneClient's Realms screens.",
+        description = "Uses SleepClient's Realms screens.",
         subcategory = "Screens",
     )
     //?} else {

@@ -8,7 +8,6 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import net.minecraft.client.Minecraft
 import org.polyfrost.oneconfig.internal.ThemeConfig
-import org.polyfrost.polyplus.client.PolyPlusConfig
 import org.polyfrost.polyplus.client.gui.PolyPlusLobbyScreen
 import org.polyfrost.polyplus.client.gui.lobbyshell.onboardingPending
 import org.polyfrost.polyplus.client.gui.screens.ScreenRouter
@@ -84,7 +83,7 @@ object StartupOverlay {
     private var quickPlay = false
 
     @JvmStatic
-    fun enabled(): Boolean = PolyPlusConfig.brandedStartup
+    fun enabled(): Boolean = false
 
     @JvmStatic
     fun noteQuickPlay(enabled: Boolean) {
@@ -146,7 +145,6 @@ object StartupOverlay {
     fun abandon(reload: CompletableFuture<*>) {
         if (!active) return
         val mc = Minecraft.getInstance()
-        if (holdNanos == 0L) reload.whenCompleteAsync({ _, _ -> StartupSounds.gameLoaded() }, LobbyCompat.mainExecutor(mc))
         finished(mc)
     }
 
@@ -268,7 +266,6 @@ object StartupOverlay {
         holdNanos = System.nanoTime()
         card = onboardingPending()
         LobbyScene.startupReveal(if (card) CARD_CHROME_DELAY else RISE_CHROME_DELAY)
-        StartupSounds.gameLoaded()
     }
 
     private fun draw(canvas: StartupCanvas, reload: Float, holding: Boolean): Boolean {
@@ -281,7 +278,6 @@ object StartupOverlay {
         val started = holding && LobbyScene.revealStarted()
         if (started && startNanos == 0L) {
             startNanos = now
-            LobbyAmbience.startup()
         }
         if (startNanos != 0L && Motion.reduced) return fadeOnly(canvas, now)
         val t = if (startNanos == 0L) 0f else seconds(startNanos, now).toFloat()

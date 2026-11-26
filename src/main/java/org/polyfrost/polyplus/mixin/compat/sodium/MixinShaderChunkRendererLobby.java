@@ -31,7 +31,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinShaderChunkRendererLobby {
     //? if sodium && < 26.2 {
     /*@Unique
-    private static final Logger polyplus$LOGGER = LogManager.getLogger("PolyPlus/Lobby");
+    private static final Logger polyplus$LOGGER = LogManager.getLogger("SleepClient/Lobby");
     @Unique
     private static final String polyplus$LOBBY_PATH = "polyplus_lobby/block_layer_opaque";
     @Unique

@@ -27,12 +27,12 @@ internal interface SettingsPageProvider {
     fun search(category: SettingsCategory, parent: () -> Screen?): List<SettingsSearchItem> = emptyList()
 }
 
-internal enum class SettingsGroup { Game, OneClient }
+internal enum class SettingsGroup { Game, SleepClient }
 
 internal class SettingsOwner(val name: String, val icon: String?, val tinted: Boolean = true) {
     companion object {
         val Minecraft = SettingsOwner("Minecraft", MINECRAFT_ICON)
-        val OneClient = SettingsOwner("OneClient", null)
+        val SleepClient = SettingsOwner("SleepClient", null)
 
         fun mod(modId: String): SettingsOwner {
             val metadata = runCatching { FabricLoader.getInstance().getModContainer(modId).orElse(null)?.metadata }.getOrNull()
@@ -158,9 +158,10 @@ internal object SettingsPages {
 }
 
 @OptIn(ExperimentalOneConfigUiApi::class)
-internal object OneClientConfigs {
+internal object SleepClientConfigs {
     private const val MAIN = PolyPlusConstants.ID + ".json"
     private const val PREFIX = PolyPlusConstants.ID + "-"
+    private val retiredScreenConfigs = setOf("mainmenu.json", "lobby.json", "pause.json", "screens.json")
     private val suffix = Regex("""\s*\([^)]*\)\s*$""")
 
     fun entries(): List<SettingsEntry> {
@@ -171,11 +172,11 @@ internal object OneClientConfigs {
             .map { tree ->
                 val id = tree.id!!
                 SettingsEntry(
-                    "oneclient:config:$id",
+                    "sleepclient:config:$id",
                     label(tree),
                     icon(id),
-                    SettingsOwner.OneClient,
-                    SettingsGroup.OneClient,
+                    SettingsOwner.SleepClient,
+                    SettingsGroup.SleepClient,
                     external = { host -> SettingsMemory.returnOnClose(host) { open(id) } },
                 )
             }
@@ -184,6 +185,7 @@ internal object OneClientConfigs {
     private fun owned(tree: Tree): Boolean {
         val id = tree.id ?: return false
         if (id != MAIN && !id.startsWith(PREFIX)) return false
+        if (id.removePrefix(PREFIX) in retiredScreenConfigs) return false
         if (tree.title == null) return false
         return tree.getMetadata<Any?>("hidden").let { it == null || it == false }
     }

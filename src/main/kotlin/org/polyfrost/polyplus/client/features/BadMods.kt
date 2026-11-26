@@ -33,7 +33,7 @@ import org.polyfrost.polyplus.privacy.PrivacyConsent
 import java.util.concurrent.atomic.AtomicBoolean
 
 object BadMods {
-    private val logger = LogManager.getLogger("PolyPlus/BadMods")
+    private val logger = LogManager.getLogger("SleepClient/BadMods")
 
     private const val DATA_URL = "https://data-v2.polyfrost.org"
     private const val LIST_URL = "$DATA_URL/oneclient/bad-mods.json"
@@ -167,7 +167,7 @@ object BadMods {
                 id = detection.mod.id,
                 name = name,
                 message = buildString {
-                    append(explanation(detection.entry) ?: "$name is known to cause problems with OneClient. We recommend removing it.")
+                    append(explanation(detection.entry) ?: "$name is known to cause problems with SleepClient. We recommend removing it.")
                     if (alternative != null) append(" Try ").append(alternative.first).append(" instead.")
                 },
                 alternative = alternative,

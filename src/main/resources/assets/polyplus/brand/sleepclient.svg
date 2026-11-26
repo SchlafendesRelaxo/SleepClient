@@ -1,0 +1,6 @@
+<svg width="240" height="44" viewBox="0 0 240 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="4" y="32" font-family="Poppins, Arial, sans-serif" font-weight="800" font-size="28" fill="currentColor" letter-spacing="-0.5">SleepClient</text>
+  <!-- Small cute 'z Z' sleep bubbles -->
+  <text x="180" y="16" font-family="Poppins, Arial, sans-serif" font-weight="700" font-size="13" fill="#A855F7" opacity="0.9">z</text>
+  <text x="190" y="10" font-family="Poppins, Arial, sans-serif" font-weight="800" font-size="16" fill="#C084FC" opacity="0.95">Z</text>
+</svg>

@@ -69,9 +69,7 @@ object WorldRoutes {
         pending = null
         val ours = PolyPlusScreensConfig.customWorlds
         return when (screen.javaClass) {
-            CreateWorldScreen::class.java -> if (ours) {
-                remember(screen, CreateWorldShell(shell ?: ScreenRouter.fallbackShell(), WorldDraft26(screen as CreateWorldScreen)))
-            } else null
+            CreateWorldScreen::class.java -> null
             EditWorldScreen::class.java -> if (ours) {
                 remember(screen, EditWorldShell(shell ?: ScreenRouter.fallbackShell(), EditWorldDraft26(screen as EditWorldScreen)))
             } else null
@@ -126,7 +124,7 @@ object WorldRoutes {
         if (!PolyPlusScreensConfig.customWorlds) return null
         val shell = origin ?: ScreenRouter.fallbackShell()
         return when (screen.javaClass) {
-            CreateWorldScreen::class.java -> remember(screen, CreateWorldShell(shell, WorldDraft189(screen as CreateWorldScreen)))
+            CreateWorldScreen::class.java -> null
             EditWorldScreen::class.java -> remember(screen, EditWorldShell(shell, EditWorldDraft189(screen as EditWorldScreen)))
             else -> null
         }

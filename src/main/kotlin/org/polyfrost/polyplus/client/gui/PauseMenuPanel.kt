@@ -303,54 +303,7 @@ object PauseMenuPanel {
     }
 
     fun register() {
-        ScreenEvents.AFTER_INIT.register { _, screen, _, _ ->
-            if (screen !is PauseScreen || !screen.showsPauseMenu() || !vanillaMenuShown()) return@register
-            val (essentialProxies, menuButtons) = screen.children().filterIsInstance<AbstractButton>()
-                .filter { it.visible }
-                .partition(::drawnElsewhere)
-            val menuLeft = menuButtons.minOfOrNull { it.x } ?: return@register
-            val menuRight = menuButtons.maxOf { it.x + it.width }
-            (screen as ScreenAccessor).polyplusAddRenderableWidget(
-                Button.builder(Component.literal(CUSTOMIZE_LABEL)) { openCustomize(screen) }
-                    .bounds(CUSTOMIZE_MARGIN, CUSTOMIZE_MARGIN, customizeWidth(), BUTTON_HEIGHT).build(),
-            )
-            // Essential's own bar is on the right, so the player goes in place of Essential's on the left
-            val withEssential = essentialProxies.isNotEmpty()
-            val layout = layout(screen.width, screen.height, menuLeft, menuRight, menuButtons.map { it.y }, onLeft = withEssential)
-            if (layout == null) {
-                layouts.remove(screen)
-                icons.remove(screen)
-                return@register
-            }
-            layouts[screen] = layout
-            // compact mode leaves Essential's player alone, since nothing takes its place
-            if (layout.onLeft) hideEssentialLeftSideBar(essentialProxies)
-            val access = screen as ScreenAccessor
-            val buttonIcons = mutableListOf<ButtonIcon>()
-            fun addIconButton(text: String, icon: String, x: Int, y: Int, onPress: () -> Unit) {
-                val label = iconLabel(text)
-                access.polyplusAddRenderableWidget(
-                    Button.builder(Component.literal(label)) { onPress() }.bounds(x, y, layout.width, BUTTON_HEIGHT).build(),
-                )
-                buttonIcons += buttonIcon(icon, x, y, layout.width, label, text)
-            }
-            layout.socialY?.let { y -> addIconButton("Social", "social", layout.x, y) { openSocial(screen) } }
-            addIconButton("Wardrobe", "wardrobe", layout.x, layout.wardrobeY) { openWardrobe(screen) }
-            layout.hostWorldY?.let { y ->
-                addIconButton(Component.translatable("polyplus.hostWorld").string, "host-world", layout.x, y) { openHostWorld(screen) }
-            }
-            icons[screen] = buttonIcons
-            layout.leftX?.let { addIconButton("Settings", "settings", it, layout.wardrobeY) { openSettings() } }
-            val playtimeX = layout.playtimeX
-            if (playtimeX == null) {
-                playtimeButtons.remove(screen)
-                return@register
-            }
-            // render-only, so it draws and highlights like the buttons around it but never gets the click or its sound
-            playtimeButtons[screen] = access.polyplusAddRenderableOnly(
-                Button.builder(Component.literal(playtimeLabel())) {}.bounds(playtimeX, layout.playtimeY, layout.width, BUTTON_HEIGHT).build(),
-            )
-        }
+        return
     }
     //?} else {
     /*private const val LEGACY_SOCIAL_ID = 0x50505301
@@ -363,50 +316,11 @@ object PauseMenuPanel {
 
     @JvmStatic
     fun addLegacyButtons(screen: Screen) {
-        if (!vanillaMenuShown()) return
-        val buttons = (screen as ScreenAccessor).`polyplus$buttons`()
-        val menuButtons = buttons.filter { it.visible }
-        val menuLeft = menuButtons.minOfOrNull { it.x } ?: return
-        val menuRight = menuButtons.maxOf { it.x + it.getWidth() }
-        buttons.add(ButtonWidget(LEGACY_CUSTOMIZE_ID, CUSTOMIZE_MARGIN, CUSTOMIZE_MARGIN, customizeWidth(), BUTTON_HEIGHT, CUSTOMIZE_LABEL))
-        val layout = layout(screen.width, screen.height, menuLeft, menuRight, menuButtons.map { it.y })
-        if (layout == null) {
-            layouts.remove(screen)
-            icons.remove(screen)
-            return
-        }
-        layouts[screen] = layout
-        val buttonIcons = mutableListOf<ButtonIcon>()
-        fun addIconButton(id: Int, text: String, icon: String, x: Int, y: Int) {
-            val label = iconLabel(text)
-            buttons.add(ButtonWidget(id, x, y, layout.width, BUTTON_HEIGHT, label))
-            buttonIcons += buttonIcon(icon, x, y, layout.width, label, text)
-        }
-        layout.socialY?.let { y -> addIconButton(LEGACY_SOCIAL_ID, "Social", "social", layout.x, y) }
-        addIconButton(LEGACY_WARDROBE_ID, "Wardrobe", "wardrobe", layout.x, layout.wardrobeY)
-        layout.hostWorldY?.let { y -> addIconButton(LEGACY_HOST_WORLD_ID, I18n.translate("polyplus.hostWorld"), "host-world", layout.x, y) }
-        icons[screen] = buttonIcons
-        val leftX = layout.leftX
-        if (leftX == null) {
-            playtimeButtons.remove(screen)
-            return
-        }
-        addIconButton(LEGACY_SETTINGS_ID, "Settings", "settings", leftX, layout.wardrobeY)
-        // kept out of the screen's buttons and drawn in render, so it looks like one but never takes a click or its sound
-        playtimeButtons[screen] = ButtonWidget(0, leftX, layout.playtimeY, layout.width, BUTTON_HEIGHT, playtimeLabel())
     }
 
     @JvmStatic
     fun onLegacyButton(screen: Screen, id: Int): Boolean {
-        when (id) {
-            LEGACY_SOCIAL_ID -> openSocial(screen)
-            LEGACY_WARDROBE_ID -> openWardrobe(screen)
-            LEGACY_HOST_WORLD_ID -> openHostWorld(screen)
-            LEGACY_SETTINGS_ID -> openSettings()
-            LEGACY_CUSTOMIZE_ID -> openCustomize(screen)
-            else -> return false
-        }
-        return true
+        return false
     }
     *///?}
 

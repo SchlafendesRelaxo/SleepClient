@@ -132,7 +132,6 @@ import org.polyfrost.polyplus.client.gui.a11yRegion
 import org.polyfrost.polyplus.client.gui.a11yRoot
 import org.polyfrost.polyplus.client.social.SocialErrors
 import org.polyfrost.polyplus.client.gui.lobbysocial.SocialPage
-import org.polyfrost.polyplus.client.gui.marketplace.MarketplacePage
 import org.polyfrost.polyplus.client.gui.menuwardrobe.WardrobePage
 import org.polyfrost.polyplus.client.gui.platformLabel
 import org.polyfrost.polyplus.client.gui.rememberAccountsPanelState
@@ -182,15 +181,14 @@ private class LobbyTab(val label: String, val page: LobbyPage)
 
 private val TABS = listOf(
     LobbyTab("Play", LobbyPage.Home),
-    LobbyTab("Wardrobe", LobbyPage.Wardrobe),
-    LobbyTab("Marketplace", LobbyPage.Marketplace),
+    LobbyTab("Skins", LobbyPage.Wardrobe),
     LobbyTab("Social", LobbyPage.Social),
     LobbyTab("Stats", LobbyPage.Stats),
     LobbyTab("News", LobbyPage.News),
 )
 
 private fun LobbyTab.activeOn(page: LobbyPage): Boolean = when (this.page) {
-    LobbyPage.Home -> page != LobbyPage.Wardrobe && page != LobbyPage.Social && page != LobbyPage.Marketplace && page != LobbyPage.Stats && page != LobbyPage.News && page != LobbyPage.Settings
+    LobbyPage.Home -> page != LobbyPage.Wardrobe && page != LobbyPage.Social && page != LobbyPage.Stats && page != LobbyPage.News && page != LobbyPage.Settings
     else -> this.page == page
 }
 
@@ -243,7 +241,6 @@ internal fun LobbyRoot(lobby: LobbyShell, screen: Screen) {
                 Box(Modifier.fillMaxSize().padding(top = notch).graphicsLayer { alpha = chrome * reveal.value }) {
                     LobbyChrome(lobby, screen, feed, IntSize(widthPx.roundToInt(), heightPx.roundToInt()), notchPx.roundToInt())
                 }
-                lobby.tour?.let { tour -> TourLayer(tour, lobby.anchors, lobby::endTour) }
             }
             if (departing) {
                 Box(Modifier.fillMaxSize().graphicsLayer { alpha = depart * depart }.background(Color.White))
@@ -251,7 +248,7 @@ internal fun LobbyRoot(lobby: LobbyShell, screen: Screen) {
         }
         BadModsDialog()
     }
-    LinkedModNotices(screen, lobby.setup || lobby.tour != null)
+    LinkedModNotices(screen, lobby.setup)
 }
 
 @Composable
@@ -304,7 +301,7 @@ private fun BoxScope.LobbyChrome(lobby: LobbyShell, screen: Screen, feed: LobbyF
             SceneTags(feed, root, notch)
             LobbyCornerCard(lobby, Modifier.align(Alignment.TopStart).padding(start = LobbyLayout.Margin, top = LobbyLayout.Top))
         }
-        LobbyPage.Wardrobe -> WardrobePage(onBack = { lobby.show(LobbyPage.Home) }, onMarketplace = { lobby.show(LobbyPage.Marketplace) })
+        LobbyPage.Wardrobe -> WardrobePage()
         LobbyPage.Multiplayer -> MultiplayerPage(lobby)
         LobbyPage.Singleplayer -> SingleplayerPage(
             selectedWorldId = lobby.selectedWorldId,
@@ -313,7 +310,6 @@ private fun BoxScope.LobbyChrome(lobby: LobbyShell, screen: Screen, feed: LobbyF
             onHost = lobby::host,
         )
         LobbyPage.Replays -> ReplaysPage(lobby.activeReplay(), onBack = { lobby.show(LobbyPage.Home) }, onSelect = lobby::select, onWatch = lobby::watch)
-        LobbyPage.Marketplace -> MarketplacePage(onBack = { lobby.show(LobbyPage.Home) }, onWardrobe = { lobby.show(LobbyPage.Wardrobe) })
         LobbyPage.Social -> SocialPage { lobby.show(LobbyPage.Home) }
         LobbyPage.Stats -> StatsPage(lobby) { lobby.show(LobbyPage.Home) }
         LobbyPage.News -> NewsPage { lobby.show(LobbyPage.Home) }
@@ -382,7 +378,6 @@ private fun BoxScope.LobbyChrome(lobby: LobbyShell, screen: Screen, feed: LobbyF
                 .width(LobbyLayout.UnitWidth)
                 .offset { IntOffset((playAway * (LobbyLayout.UnitWidth + LobbyLayout.Margin).toPx()).roundToInt(), 0) }
                 .graphicsLayer { alpha = 1f - playAway }
-                .tourAnchor(lobby.anchors, TourAnchor.Play)
                 .a11yRegion(A11yRegion.Play),
         )
     }
@@ -446,7 +441,7 @@ private fun BoxScope.Footer(screen: Screen) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         LobbyIcon("footer-logo", size = 14.dp)
-        FooterBrandText("${platformLabel()}   PolyPlus ${PolyPlusConstants.VERSION}", 11.sp, SocialTextPrimary)
+        FooterBrandText("${platformLabel()}   SleepClient ${PolyPlusConstants.VERSION}", 11.sp, SocialTextPrimary)
         Spacer(Modifier.weight(1f))
         CopyrightText(screen, 11.sp, SocialTextSecondary, maxLines = 1)
     }
@@ -481,8 +476,8 @@ private fun NavbarRow(lobby: LobbyShell, screen: Screen, unread: Boolean) {
         val items = visible.map { tab ->
             val modifier = when (tab.page) {
                 LobbyPage.Home -> Modifier.onGloballyPositioned { StartupOverlay.navLine = navUnderline(it, density) }
-                LobbyPage.Wardrobe -> Modifier.tourAnchor(lobby.anchors, TourAnchor.Wardrobe)
-                LobbyPage.Social -> Modifier.tourAnchor(lobby.anchors, TourAnchor.Social)
+                LobbyPage.Wardrobe -> Modifier
+                LobbyPage.Social -> Modifier
                 else -> Modifier
             }
             val dot = when {
@@ -506,7 +501,7 @@ private const val INVITE_PENDING = "pending"
 
 @Composable
 private fun ProfileCluster(lobby: LobbyShell, screen: Screen) {
-    Row(Modifier.tourAnchor(lobby.anchors, TourAnchor.Tools).a11yRegion(A11yRegion.Tools), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.a11yRegion(A11yRegion.Tools), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         val mc = Minecraft.getInstance()
         ServiceStatusButton()
         NavIconButton(SOCIAL_ASSETS + "discord.svg", "Join our Discord", { ClientPlatform.openUri(PolyPlusConstants.DISCORD_URL) })
@@ -763,8 +758,7 @@ private fun MoreMenu(lobby: LobbyShell, screen: Screen, onClose: () -> Unit) {
     val theme = themeToggle()
     val entries = buildList<MenuEntry> {
         if (theme != null) add(MenuAction(theme.label, theme.toggle, icon = theme.icon, size = MenuItemSize.Regular))
-        add(MenuAction("Replay tour", { onClose(); lobby.replayTour() }, icon = SOCIAL_ASSETS + "play-circle.svg", size = MenuItemSize.Regular))
-        add(MenuAction("Switch to OneClient v1 main menu", { onClose(); MainMenuReplacement.switchToPolyPlusMenu() }, icon = SOCIAL_ASSETS + "logo.svg", size = MenuItemSize.Regular))
+        add(MenuAction("Switch to SleepClient v1 main menu", { onClose(); MainMenuReplacement.switchToPolyPlusMenu() }, icon = SOCIAL_ASSETS + "logo.svg", size = MenuItemSize.Regular))
         add(MenuAction("Switch to vanilla main menu", { onClose(); MainMenuReplacement.switchToVanilla() }, icon = SOCIAL_ASSETS + "minecraft-block.svg", size = MenuItemSize.Regular))
         if (!PolyPlusMainMenuConfig.hideMainMenuModButtons) {
             ModIntegrationButtons.withoutModMenu().forEach { button ->

@@ -58,10 +58,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 
 private const val PARALLAX_EASE = 0.02f
 
-private val GlowA = Color(0xFF1878F1)
-private val GlowB = Color(0xFF24D3EE)
-private val GlowC = Color(0xFF6D5EF6)
-private val FxPageBackground = Color(0xFF11171C)
+private val GlowA = Color(0xFFA020F0)
+private val GlowB = Color(0xFFB84DFF)
+private val GlowC = Color(0xFF7A15BD)
+private val FxPageBackground = Color(0xFF100D17)
 
 private class Blob(
     val ax: Float, val ay: Float,

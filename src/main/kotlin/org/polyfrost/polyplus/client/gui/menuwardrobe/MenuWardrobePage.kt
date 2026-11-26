@@ -52,6 +52,7 @@ import org.polyfrost.polyplus.client.gui.lobbyshell.ConsentStep
 import org.polyfrost.polyplus.client.gui.lobbyshell.CustomizeKit
 import org.polyfrost.polyplus.client.gui.lobbyshell.LobbyLayout
 import org.polyfrost.polyplus.client.gui.lobbyshell.rememberOnlineConsent
+import org.polyfrost.polyplus.client.gui.PolyPlusCosmeticsScreen
 import org.polyfrost.polyplus.client.gui.preview.PlayerPreview
 import org.polyfrost.polyplus.client.gui.preview.PlayerPreviewSource
 import org.polyfrost.polyplus.client.gui.preview.PreviewLights
@@ -119,10 +120,7 @@ private fun capeNote(state: MojangCapeState): String? = when (state) {
 }
 
 @Composable
-internal fun WardrobePage(onBack: () -> Unit, onMarketplace: () -> Unit) {
-    var consent by rememberOnlineConsent()
-    WardrobeContent(consent, onBack, onMarketplace) { consent = true }
-}
+internal fun WardrobePage() = PolyPlusCosmeticsScreen()
 
 @Composable
 private fun WardrobeContent(online: Boolean, onBack: () -> Unit, onMarketplace: () -> Unit, onAccepted: () -> Unit) {

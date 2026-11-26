@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Minecraft.class)
 public class MixinMinecraftStartGame {
     @Unique
-    private static final Logger polyplus$LOGGER = LogManager.getLogger("PolyPlus");
+    private static final Logger polyplus$LOGGER = LogManager.getLogger("SleepClient");
 
     @Unique
     private static final long polyplus$STOP_WAIT_MILLIS = 10_000L;

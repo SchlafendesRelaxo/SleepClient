@@ -33,10 +33,9 @@ internal val DockTileWidth = LobbyLayout.BarHeight - DOCK_INSET * 2
 internal fun LobbyDock(lobby: LobbyShell, onTiles: (Int) -> Unit = {}) {
     if (lobby.page != LobbyPage.Home) return
     Row(Modifier.height(LobbyLayout.BarHeight).panel(DOCK_RADIUS).onSizeChanged { onTiles(it.width) }, verticalAlignment = Alignment.CenterVertically) {
-        DockTile("Customize lobby", DockTileWidth, first = true, last = false, active = lobby.customizeOpen, onClick = lobby.customize::toggle) {
+        DockTile("Customize lobby", DockTileWidth, first = true, last = true, active = lobby.customizeOpen, onClick = lobby.customize::toggle) {
             LobbyIcon("image-01")
         }
-        LobbyMusicButton(lobby, first = false, last = true)
     }
 }
 

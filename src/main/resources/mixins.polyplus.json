@@ -112,7 +112,6 @@
     //? if > 1.8.9
     "client.MixinRealmsConnect",
     //? if > 1.8.9
-    "client.MixinCubeMap",
     "client.MixinDisconnectedScreen",
     //? if = 1.8.9
     //"client.MixinEffect",
@@ -121,16 +120,11 @@
     //? if > 1.8.9
     "client.MixinGameNarrator",
     //? if > 1.8.9
-    "client.MixinGenericMessageScreen",
-    "client.MixinLevelLoadingScreen",
-    "client.MixinGameRendererShellScene",
-    "client.MixinMinecraftWorldLoad",
     //? if < 1.21.9 && > 1.8.9
     //"client.MixinLevelLoadingProgress",
     //? if = 1.8.9
     //"client.MixinGameOptions",
     "client.MixinGameRenderer",
-    "client.MixinGui",
     //? if >= 1.21.11
     "client.MixinGuiMessage",
     "client.MixinIntegratedServer",
@@ -142,6 +136,8 @@
     //"client.MixinMinecraftStartGame",
     "client.MixinMinecraftSystemReport",
     "client.MixinMinecraftTitle",
+    //? if = 1.21.11
+    "client.MixinMenuMusic",
     //? if > 1.8.9
     "client.MixinMouseHandler",
     "client.MixinJoinMultiplayerScreen",
@@ -161,15 +157,10 @@
     "client.ping.PingPickInvoker",
     //? if = 1.8.9
     //"client.ping.PingFovInvoker",
-    //? if > 1.8.9
-    "client.MixinPanorama",
-    //? if <26.3
-    //"client.MixinPauseScreen",
     "client.MixinPlayerTabOverlay",
     //? if = 1.8.9
     //"client.MixinProgressRenderer",
     "client.MixinRenderTarget",
-    "client.MixinScreen",
     "client.MixinScreenWatermark",
     //? if > 1.8.9
     "client.MixinWatermarkMouse",
@@ -178,7 +169,6 @@
     //"client.MixinSession",
     //? if > 1.8.9
     "client.MixinTabButton",
-    "client.MixinTitleScreen",
     //? if = 1.8.9
     //"client.MixinUnopenedPack",
     //? if > 1.8.9
@@ -194,9 +184,7 @@
     //? if > 1.8.9
     "client.access.CameraAccessor",
     //? if > 1.8.9
-    "client.access.ChannelAccessor",
     //? if > 1.8.9
-    "client.access.ChannelHandleAccessor",
     "client.access.ClientCommonPacketListenerAccessor",
     "client.access.ClientHandshakePacketListenerAccessor",
     "client.access.ClientPacketListenerAccessor",
@@ -240,9 +228,7 @@
     //? if > 1.8.9 && < 1.21.11
     //"client.access.ScreenBindAccessor",
     //? if > 1.8.9
-    "client.access.SoundEngineAccessor",
     //? if > 1.8.9
-    "client.access.SoundManagerAccessor",
     //? if > 1.8.9
     "client.access.SpriteIconButtonAccessor",
     //? if = 1.8.9
@@ -254,83 +240,39 @@
     //? if = 1.8.9
     //"client.access.WorldRendererAccessor",
     //? if <1.21.8
-    //"client.cosmetics.EntityRenderDispatcherAccessor",
-    "client.cosmetics.LivingEntityRendererInvoker",
-    "client.cosmetics.MixinAbstractClientPlayer",
-    "client.cosmetics.MixinAvatarRenderer",
     //? if >= 1.21.4
-    "client.cosmetics.MixinAvatarRenderState",
     //? if >= 1.21.4
-    "client.cosmetics.MixinCapeLayer",
     //? if = 1.21.1 || = 1.8.9
-    //"client.cosmetics.MixinLivingEntityRenderer",
-    "client.cosmetics.MixinPlayerModel",
     //? if > 1.8.9
-    "client.lobby.MixinCamera",
     //? if > 1.8.9
-    "client.lobby.MixinLobbyCamera",
     //? if > 1.8.9
-    "client.lobby.MixinChannel",
     //? if >= 1.21.8
-    "client.lobby.MixinChunkSectionLayer",
     //? if < 1.21.11 && > 1.8.9
-    //"client.lobby.MixinClientLevel",
     //? if = 1.8.9
-    //"client.lobby.MixinClientWorld",
     //? if < 1.21.11 && >= 1.21.5
-    //"client.lobby.MixinCompositeRenderType",
     //? if >= 1.21.11
-    "client.lobby.MixinRenderTypeHologram",
     //? if < 1.21.5 && > 1.8.9
-    //"client.lobby.MixinRenderStateShard",
     //? if > 1.8.9
-    "client.lobby.MixinDebugRenderer",
     //? if >= 1.21.8 && < 26.2
-    //"client.lobby.MixinDebugScreenOverlay",
     //? if < 26.1 && > 1.8.9
-    //"client.lobby.MixinDeltaTrackerTimer",
     //? if < 1.21.10
-    //"client.lobby.MixinEntityRenderDispatcher",
-    "client.lobby.MixinEntityRenderer",
     //? if >= 1.21.11
-    "client.lobby.MixinEnvironmentAttributeSystem",
     //? if < 26.1 && > 1.8.9
-    //"client.lobby.MixinFogRenderer",
     //? if = 1.8.9
-    //"client.lobby.MixinGameGui",
-    "client.lobby.MixinGameRenderer",
-    "client.lobby.MixinLobbyHand",
     //? if < 26.1 && > 1.8.9
-    //"client.lobby.MixinLevelRenderer",
     //? if < 1.21.8 && > 1.8.9
-    //"client.lobby.MixinLevelRendererSections",
     //? if < 1.21.11 && > 1.8.9
-    //"client.lobby.MixinLightTexture",
     //? if > 1.8.9
-    "client.lobby.MixinInitialScreens",
     //? if > 1.8.9
-    "client.lobby.MixinLoadingOverlay",
-    "client.lobby.MixinMinecraft",
     //? if = 1.8.9
-    //"client.lobby.MixinMinecraftStartup",
-    "client.lobby.MixinMinecraftServer",
-    "client.lobby.MixinMusicManager",
     //? if = 1.8.9
-    //"client.lobby.MixinPlayerRenderer",
     //? if < 1.21.5 && > 1.8.9
-    //"client.lobby.MixinRenderSystem",
     //? if > 1.8.9
-    "client.lobby.MixinScreen",
     //? if >= 26.2
-    "client.lobby.MixinShaderConfigsLobby",
     //? if >= 1.21.4
-    "client.lobby.MixinShaderManagerLobby",
     //? if = 1.8.9
-    //"client.lobby.MixinWorld",
     //? if = 1.8.9
-    //"client.lobby.MixinWorldRenderer",
     //? if >= 1.21.4
-    "compat.renderscale.MixinRenderScaleLobby",
     //? if > 1.8.9
     "compat.spatialgui.MixinSpatialGUIClient",
     //? if > 1.8.9
@@ -346,10 +288,6 @@
     //? if = 1.8.9
     //"compat.polytime.MixinPolyTimeWorldData",
     //? if > 1.8.9
-    "client.pause.MixinPauseCamera",
-    "client.pause.MixinPauseHand",
-    "client.pause.MixinPauseCulling",
-    "client.pause.MixinPauseRenderer",
     //? if > 1.8.9
     "client.privacy.MixinAbstractSignEditScreen",
     //? if > 1.8.9
@@ -397,7 +335,6 @@
     //? if > 1.8.9
     "compat.clothconfig.MixinGsonConfigSerializer",
     //? if > 1.8.9
-    "compat.confirmdisconnect.MixinConfirmDisconnectPauseScreen",
     //? if < 1.21.8 && > 1.8.9
     //"compat.confirmdisconnect.MixinConfirmDisconnectScreen",
     "compat.dynamicfps.MixinDynamicFPSMod",
@@ -426,8 +363,6 @@
     //? if = 1.8.9
     //"compat.oneconfig.MixinComposeScreen",
     "compat.oneconfig.MixinEventManager",
-    "compat.oneconfig.MixinExternalSounds",
-    "compat.oneconfig.MixinUiSounds",
     "compat.oneconfig.MixinGlHost",
     "compat.polyblur.MixinPolyBlurConfigLobby",
     "compat.polyhitbox.MixinPolyHitboxRenderer",

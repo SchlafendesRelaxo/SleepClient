@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 /**
  * 26.3 moved the Open to LAN flow into World Options, so that screen's Multiplayer section is swapped for
- * the PolyPlus host flow.
+ * the SleepClient host flow.
  */
 //? if >= 26.3 {
 @Mixin(WorldOptionsScreen.class)

@@ -60,7 +60,7 @@ object ClientWatermark {
     const val POSITION_RIGHT_CENTER = 7
 
     private const val LOGO = "assets/polyplus/mainmenu/logo.svg"
-    private const val WORDMARK = "assets/polyplus/brand/oneclient.svg"
+    private const val WORDMARK = "assets/polyplus/brand/sleepclient.svg"
 
     private const val LOGO_SIZE = 17f
     private const val GAP = 5f
@@ -90,7 +90,7 @@ object ClientWatermark {
 
     @JvmStatic
     fun visibleOn(screen: Screen): Boolean =
-        PolyPlusConfig.watermarkEnabled && LauncherEnvironment.isOneClient && shownOn(screen)
+        PolyPlusConfig.watermarkEnabled && shownOn(screen)
 
     //? if > 1.8.9 {
     private fun shownOn(screen: Screen): Boolean =

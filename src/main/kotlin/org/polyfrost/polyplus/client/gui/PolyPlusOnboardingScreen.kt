@@ -94,9 +94,7 @@ import org.polyfrost.oneconfig.api.ui.v1.theme.OneConfigUITheme
 import org.polyfrost.oneconfig.api.ui.v1.platform.OneConfigComposeScreen
 import org.polyfrost.oneconfig.internal.ui.screens.ModCard as OneConfigModCard
 import org.polyfrost.polyplus.client.PolyPlusConfig
-import org.polyfrost.polyplus.client.PolyPlusPauseConfig
 import org.polyfrost.polyplus.client.PolyPlusScreensConfig
-import org.polyfrost.polyplus.client.gui.pausescreen.PauseScreenStyle
 import org.polyfrost.polyplus.client.features.AdaptiveBlurDefaults
 import org.polyfrost.polyplus.client.features.BlockHighlightDraft
 import org.polyfrost.polyplus.client.features.BlockHighlightPresets
@@ -247,15 +245,13 @@ internal fun OnboardingFlow(
         OnboardingFeatures.newModCards(PolyPlusConfig.onboardingModSettingsVersion, modReads.cards)
     }
     val sprintStep = needsSettings && OnboardingFeatures.polySprintAvailable
-    val watermarkStep = remember { LauncherEnvironment.isOneClient && !PolyPlusConfig.watermarkAsked }
-    val screensStep = remember { needsSettings || !PolyPlusScreensConfig.onboardingAsked }
+    val watermarkStep = remember { LauncherEnvironment.isSleepClient && !PolyPlusConfig.watermarkAsked }
     var guides by remember { mutableStateOf(owedGuides) }
     val pages = remember(guides) {
         buildList {
             if (accessibilityStep) add(OnboardingStep.Accessibility)
             if (needsTerms) add(OnboardingStep.Terms)
             if (needsSettings) add(OnboardingStep.LookAndFeel)
-            if (screensStep) add(OnboardingStep.Screens)
             if (needsSettings) add(OnboardingStep.ModOrder)
             if (showsModSettings) {
                 if (sprintStep) add(OnboardingStep.Sprint)
@@ -278,7 +274,6 @@ internal fun OnboardingFlow(
     }
     var toggleSprint by remember { mutableStateOf(PolyPlusConfig.onboardingToggleSprint) }
     var watermark by remember { mutableStateOf(PolyPlusConfig.watermarkEnabled) }
-    var screens by remember { mutableStateOf(ScreenPart.shown.associateWith { it.read() }) }
     var alphabeticalMods by remember { mutableStateOf(DefaultModOrder.alphabetical()) }
     var grassMode by remember { mutableIntStateOf(OnboardingFeatures.BETTER_GRASS_OFF) }
     var fireHeight by remember { mutableStateOf(modReads.fireHeight ?: PolyPlusConfig.onboardingFireOverlayHeight) }
@@ -422,12 +417,8 @@ internal fun OnboardingFlow(
             PolyPlusConfig.watermarkEnabled = watermark
             PolyPlusConfig.watermarkAsked = true
         }
-        if (screensStep) {
-            screens.forEach { (part, ours) -> part.write(ours) }
-            PolyPlusScreensConfig.onboardingAsked = true
-            PolyPlusScreensConfig.save()
-            PolyPlusPauseConfig.save()
-        }
+        PolyPlusScreensConfig.onboardingAsked = true
+        PolyPlusScreensConfig.save()
         OnboardingFeatures.markGuidesShown(guides.map { it.card })
         PolyPlusConfig.onboardingCompleted = true
         PolyPlusConfig.save()
@@ -515,7 +506,6 @@ internal fun OnboardingFlow(
                     uiStyle, { uiStyle = it },
                     guiScale, maxGuiScale, { chosenGuiScale = it },
                 )
-            OnboardingStep.Screens -> ScreensPage(screens) { screens = it }
             OnboardingStep.ModOrder -> ModOrderPage(alphabeticalMods) { alphabeticalMods = it }
             OnboardingStep.Sprint -> SprintPage(toggleSprint) { toggleSprint = it }
             is OnboardingStep.Mods -> {
@@ -734,7 +724,7 @@ private fun LookAndFeelPage(
     maxGuiScale: Int,
     onGuiScale: (Int) -> Unit,
 ) {
-    Header("Let’s configure the", "Look & Feel")
+    Header("Let’s configure the", "SleepClient Look & Feel")
     val colorsHeight = LABEL_HEIGHT + 32f
     val styleHeight = LABEL_HEIGHT + 155f
     val scaleHeight = if (Mods.guiSlider) 0f else LABEL_HEIGHT + 32f + SECTION_GAP
@@ -967,7 +957,7 @@ private fun WatermarkPage(watermark: Boolean, onWatermark: (Boolean) -> Unit) {
         ) {
             Icon(name = MAIN_MENU_ASSETS + "logo.svg", contentDescription = null, tint = OneConfigTheme.accent, modifier = Modifier.size(WATERMARK_LOGO_SIZE.dp))
             Icon(
-                name = BRAND_ASSETS + "oneclient.svg",
+                name = BRAND_ASSETS + "sleepclient.svg",
                 contentDescription = null,
                 tint = OneConfigTheme.accent,
                 modifier = Modifier.size(WATERMARK_WORDMARK_WIDTH.dp, WATERMARK_WORDMARK_HEIGHT.dp),
@@ -978,131 +968,6 @@ private fun WatermarkPage(watermark: Boolean, onWatermark: (Boolean) -> Unit) {
             ChoiceButton("Show", MAIN_MENU_ASSETS + "logo.svg", watermark, 198f, option = true) { onWatermark(true) }
             ChoiceButton("Hide", MAIN_MENU_ASSETS + "x-close.svg", !watermark, 198f, option = true) { onWatermark(false) }
         }
-    }
-}
-
-private enum class ScreenPart(val title: String, val description: String) {
-    SETTINGS("Settings", "Options, controls and resource packs"),
-    WORLDS("Create and edit world", "Making a new world or changing one"),
-    CONNECTING("Connecting", "Joining and leaving servers and worlds"),
-    REALMS("Realms", "Browsing and joining your Realms"),
-    PAUSE("Pause screen", "The menu you get when you press Escape"),
-    LOADING("Loading screen", "What shows while the game starts"),
-    ;
-
-    fun read(): Boolean = when (this) {
-        SETTINGS -> PolyPlusScreensConfig.customSettings
-        WORLDS -> PolyPlusScreensConfig.customWorlds
-        CONNECTING -> PolyPlusScreensConfig.customConnecting
-        REALMS -> PolyPlusScreensConfig.customRealms
-        PAUSE -> PolyPlusPauseConfig.pauseScreenStyle != PauseScreenStyle.VANILLA
-        LOADING -> PolyPlusConfig.brandedStartup
-    }
-
-    fun write(ours: Boolean) {
-        when (this) {
-            SETTINGS -> PolyPlusScreensConfig.customSettings = ours
-            WORLDS -> PolyPlusScreensConfig.customWorlds = ours
-            CONNECTING -> PolyPlusScreensConfig.customConnecting = ours
-            REALMS -> PolyPlusScreensConfig.customRealms = ours
-            PAUSE -> {
-                val style = PolyPlusPauseConfig.pauseScreenStyle
-                PolyPlusPauseConfig.pauseScreenStyle = when {
-                    !ours -> PauseScreenStyle.VANILLA
-                    style == PauseScreenStyle.VANILLA -> PauseScreenStyle.STEP_BACK_FLAT
-                    else -> style
-                }
-            }
-            LOADING -> PolyPlusConfig.brandedStartup = ours
-        }
-    }
-
-    companion object {
-        //? if > 1.8.9 {
-        val shown: List<ScreenPart> = entries
-        //?} else {
-        /*val shown: List<ScreenPart> = entries - REALMS
-        *///?}
-    }
-}
-
-@Composable
-private fun ScreensPage(choices: Map<ScreenPart, Boolean>, onChoices: (Map<ScreenPart, Boolean>) -> Unit) {
-    Header("Continuing with", "Screens")
-    Column(Modifier.offset(CARD_MARGIN.dp, SCREENS_TOP.dp).width(SCREENS_WIDTH.dp)) {
-        Row(Modifier.height(32.dp), verticalAlignment = Alignment.CenterVertically) {
-            Spacer(Modifier.weight(1f))
-            TextButton(
-                "Use all",
-                { onChoices(ScreenPart.shown.associateWith { true }) },
-                Modifier.width(SCREENS_ACTION_WIDTH.dp),
-                size = ControlSize.Compact,
-                enabled = choices.values.any { !it },
-                contentDescription = "Use all of OneClient's screens",
-            )
-            Spacer(Modifier.width(8.dp))
-            TextButton(
-                "Use none",
-                { onChoices(ScreenPart.shown.associateWith { false }) },
-                Modifier.width(SCREENS_ACTION_WIDTH.dp),
-                size = ControlSize.Compact,
-                enabled = choices.values.any { it },
-                contentDescription = "Use none of OneClient's screens",
-            )
-        }
-        Spacer(Modifier.height(SCREENS_HEADER_GAP.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(SCREEN_ROW_GAP.dp)) {
-            ScreenPart.shown.forEach { part ->
-                ScreenRow(part, choices[part] ?: true) { onChoices(choices + (part to it)) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ScreenRow(part: ScreenPart, ours: Boolean, onOurs: (Boolean) -> Unit) {
-    Row(
-        Modifier
-            .width(SCREENS_WIDTH.dp)
-            .height(SCREEN_ROW_HEIGHT.dp)
-            .themedSurface(SurfaceKind.Card)
-            .padding(horizontal = SCREEN_ROW_PADDING.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            part.title,
-            modifier = Modifier.width(SCREEN_TITLE_WIDTH.dp),
-            style = OneConfigTheme.current.typography.body.copy(fontWeight = FontWeight.Medium),
-            maxLines = 1,
-            softWrap = false,
-        )
-        Text(
-            part.description,
-            modifier = Modifier.weight(1f),
-            color = SocialTextSecondary,
-            style = OneConfigTheme.current.typography.small.copy(fontWeight = FontWeight.Light),
-            maxLines = 1,
-        )
-        Spacer(Modifier.width(12.dp))
-        Chip(
-            "OneClient",
-            ours,
-            { if (!ours) onOurs(true) },
-            Modifier.size(SCREEN_CHIP_WIDTH.dp, SCREEN_CHIP_HEIGHT.dp),
-            size = ControlSize.Compact,
-            role = A11yRole.Option,
-            contentDescription = "${part.title}: OneClient",
-        )
-        Spacer(Modifier.width(CARD_CHIP_GAP.dp))
-        Chip(
-            "Vanilla",
-            !ours,
-            { if (ours) onOurs(false) },
-            Modifier.size(SCREEN_CHIP_WIDTH.dp, SCREEN_CHIP_HEIGHT.dp),
-            size = ControlSize.Compact,
-            role = A11yRole.Option,
-            contentDescription = "${part.title}: Vanilla",
-        )
     }
 }
 
@@ -1751,7 +1616,7 @@ private fun LockupHeader() {
     ) {
         Box(Modifier.onGloballyPositioned { StartupOverlay.cardMark = StartupOverlay.place(it) }) { LobbyIcon("logo", size = 36.dp) }
         Box(Modifier.onGloballyPositioned { StartupOverlay.cardWord = StartupOverlay.place(it) }) {
-            Text("ONECLIENT", style = OneConfigTheme.current.typography.body.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.2.sp, fontFamily = Outfit), maxLines = 1, softWrap = false)
+            Text("SLEEPCLIENT", style = OneConfigTheme.current.typography.body.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.2.sp, fontFamily = Outfit), maxLines = 1, softWrap = false)
         }
     }
 }
@@ -1886,9 +1751,9 @@ private fun ChoiceButton(
 private class UiStyleOption(val style: Int, val label: String, val caption: String, val glass: Boolean)
 
 private val UiStyleOptions = listOf(
-    UiStyleOption(OnboardingFeatures.UI_STYLE_POLYFROSTED, "Polyfrosted", "Frosted panels, the OneConfig look", glass = false),
-    UiStyleOption(OnboardingFeatures.UI_STYLE_POLYGLASS, "PolyGlass", "See-through glass over your game", glass = true),
-    UiStyleOption(OnboardingFeatures.UI_STYLE_MINECRAFT, "Minecraft", "Blocky, like the vanilla menus", glass = false),
+    UiStyleOption(OnboardingFeatures.UI_STYLE_POLYFROSTED, "SleepClient", "SleepClient's signature frosted panels", glass = false),
+    UiStyleOption(OnboardingFeatures.UI_STYLE_POLYGLASS, "Sleep Glass", "Clear glass over your game", glass = true),
+    UiStyleOption(OnboardingFeatures.UI_STYLE_MINECRAFT, "Vanilla", "Pixel styling inspired by vanilla Minecraft", glass = false),
 )
 
 private val StylePreviewBackdrop = Brush.verticalGradient(
@@ -2338,7 +2203,7 @@ private fun TermsPage(
 
     val panelWidth = LocalPanelWidth.current
     if (top > TERMS_CONTENT_TOP) {
-        if (StartupOverlay.enabled()) LockupHeader() else Header("Welcome to", "OneClient")
+        if (StartupOverlay.enabled()) LockupHeader() else Header("Welcome to", "SleepClient")
     }
     Box(
         Modifier
@@ -2467,10 +2332,8 @@ private fun pageSpeech(step: OnboardingStep, page: Int, waiting: Boolean): Strin
     val body = when (step) {
         OnboardingStep.Accessibility -> ""
         OnboardingStep.Terms ->
-            "Welcome to OneClient. Agree to the Terms of Service and Privacy Policy to use online features. $TERMS_NOTE"
+            "Welcome to SleepClient. Agree to the Terms of Service and Privacy Policy to use online features. $TERMS_NOTE"
         OnboardingStep.LookAndFeel -> "Look and Feel. Choose the UI colors, UI style and GUI scale."
-        OnboardingStep.Screens ->
-            "Screens. " + ScreenPart.shown.joinToString(", ") { it.title } + "."
         OnboardingStep.ModOrder -> "Mod Sorting. $MOD_ORDER_TEXT"
         OnboardingStep.Sprint -> "Toggle Sprint. $SPRINT_TEXT"
         is OnboardingStep.Mods -> "Mods: " + step.cards.joinToString(" and ") { modCardTitle(it) } + "."
@@ -2544,7 +2407,6 @@ private sealed interface OnboardingStep {
     data object Accessibility : OnboardingStep
     data object Terms : OnboardingStep
     data object LookAndFeel : OnboardingStep
-    data object Screens : OnboardingStep
     data object ModOrder : OnboardingStep
     data object Sprint : OnboardingStep
 
@@ -2754,27 +2616,17 @@ private const val MIN_TEXT_CONTRAST = 4.5f
 private const val FPS_MIDDLE_BLEND = 0.5f
 private const val HUD_BACKGROUND_ALPHA = 0.5f
 private const val TERMS_NOTE =
-    "Declining turns off crash reports, friends, parties, world hosting, featured servers, cosmetics and the Marketplace. You can change this later in Settings."
+    "Declining turns off crash reports, friends, parties, world hosting, featured servers and skin changes. You can change this later in Settings."
 private const val MOD_ORDER_TEXT = "Choose how the mods list is sorted. Recommended puts the mods you are most likely to tweak first."
 private const val SPRINT_TEXT = "Turn sprinting into a toggle so you keep running after you let go of the key."
 private const val WATERMARK_TEXT =
-    "Show the OneClient logo in inventories and options screens. You can move, resize or recolor it later in settings."
-private const val SCREENS_TOP = 122f
-private const val SCREENS_WIDTH = PANEL_WIDTH - CARD_MARGIN * 2f
-private const val SCREENS_ACTION_WIDTH = 96f
-private const val SCREENS_HEADER_GAP = 14f
-private const val SCREEN_ROW_HEIGHT = 44f
-private const val SCREEN_ROW_GAP = 6f
-private const val SCREEN_ROW_PADDING = 14f
-private const val SCREEN_TITLE_WIDTH = 190f
-private const val SCREEN_CHIP_WIDTH = 92f
-private const val SCREEN_CHIP_HEIGHT = 28f
+    "Show the SleepClient logo in inventories and options screens. You can move, resize or recolor it later in settings."
 private const val WATERMARK_PREVIEW_WIDTH = 232f
 private const val WATERMARK_PREVIEW_HEIGHT = 56f
 private const val WATERMARK_LOGO_SIZE = 28f
 private const val WATERMARK_WORDMARK_HEIGHT = 18f
 private const val WATERMARK_WORDMARK_WIDTH = WATERMARK_WORDMARK_HEIGHT * (159f / 19f)
-private const val DONE_TEXT = "That’s all for now, thank you for choosing OneClient! We hope you have a nice experience using it."
+private const val DONE_TEXT = "That’s all for now, thank you for choosing SleepClient! We hope you have a nice experience using it."
 
 private val LocalCardTitle = compositionLocalOf { "" }
 

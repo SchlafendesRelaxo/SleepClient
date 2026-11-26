@@ -10,8 +10,8 @@ public abstract class MixinClientBrandRetriever {
     @ModifyReturnValue(method = "getClientModName", at = @At("RETURN"))
     private static String polyplus$oneClientBrand(String original) {
         //? if = 1.8.9 {
-        /*return "fabric".equals(original) ? "oneclient" : original;
+        /*return "SleepClient";
         *///?} else
-        return "fabric".equals(original) ? "oneclient (fabric)" : original;
+        return "SleepClient (Fabric)";
     }
 }

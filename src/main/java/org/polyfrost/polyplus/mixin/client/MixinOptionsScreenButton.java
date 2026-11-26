@@ -13,12 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(OptionsScreen.class)
 public abstract class MixinOptionsScreenButton extends Screen {
     @Inject(method = "init", at = @At("RETURN"))
-    private void polyplus$addOneClientButton(CallbackInfo ci) {
+    private void polyplus$addSleepClientButton(CallbackInfo ci) {
         this.buttons.add(VanillaMenuButton.legacyOptionsButton(this.width));
     }
 
     @Inject(method = "buttonClicked", at = @At("HEAD"), cancellable = true)
-    private void polyplus$openOneClientSettings(ButtonWidget button, CallbackInfo ci) {
+    private void polyplus$openSleepClientSettings(ButtonWidget button, CallbackInfo ci) {
         if (VanillaMenuButton.onLegacyOptionsButton(button.id)) ci.cancel();
     }
 }

@@ -11,7 +11,6 @@ import org.polyfrost.polyplus.client.PolyPlusPauseConfig
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen
 import org.polyfrost.polyplus.client.gui.lobbyshell.LobbyPage
-import org.polyfrost.polyplus.client.gui.lobbyshell.onboardingPending
 import org.polyfrost.polyplus.client.gui.pausescreen.PauseScreenStyle
 import org.polyfrost.polyplus.client.lobby.LOBBY_LOGGER
 import org.polyfrost.polyplus.client.lobby.LobbyScene
@@ -19,19 +18,15 @@ import org.polyfrost.polyplus.client.utils.ClientPlatform
 
 object MainMenuReplacement {
     private var playing = false
-    private var lobbyFailed = false
     private var vanillaServerList = false
 
-    internal fun choice(): MainMenuChoice {
-        val chosen = PolyPlusMainMenuConfig.mainMenu
-        return if (chosen == MainMenuChoice.LOBBY && lobbyFailed) MainMenuChoice.VANILLA else chosen
-    }
+    internal fun choice(): MainMenuChoice = MainMenuChoice.VANILLA
 
     @JvmStatic
-    fun enabled(): Boolean = choice() == MainMenuChoice.LOBBY
+    fun enabled(): Boolean = choice() != MainMenuChoice.VANILLA
 
     @JvmStatic
-    fun replacesTitleScreen(): Boolean = choice() != MainMenuChoice.VANILLA
+    fun replacesTitleScreen(): Boolean = enabled()
 
     @JvmStatic
     fun isMenu(screen: Screen?): Boolean = screen is PolyPlusLobbyScreen || screen is PolyPlusMainMenuScreen
@@ -40,14 +35,10 @@ object MainMenuReplacement {
     fun alreadyOpen(): Boolean = ClientPlatform.currentScreen().let { isMenu(it) || it is PolyPlusOnboardingScreen }
 
     @JvmStatic
-    fun create(): Screen = when {
-        choice() != MainMenuChoice.POLYPLUS -> PolyPlusLobbyScreen()
-        onboardingPending() -> PolyPlusOnboardingScreen()
-        else -> PolyPlusMainMenuScreen()
-    }
+    fun create(): Screen = TitleScreen()
 
     @JvmStatic
-    fun open() = ClientPlatform.setScreen(create())
+    fun open() = ClientPlatform.setScreen(TitleScreen())
 
     fun dismissVanillaOffer() {
         PolyPlusConfig.vanillaOfferDismissed = true
@@ -55,40 +46,32 @@ object MainMenuReplacement {
     }
 
     fun useVanillaOffer() {
-        PolyPlusConfig.brandedStartup = false
         PolyPlusPauseConfig.pauseScreenStyle = PauseScreenStyle.VANILLA
         PolyPlusPauseConfig.save()
         dismissVanillaOffer()
-        switchTo(MainMenuChoice.POLYPLUS)
+        switchTo()
     }
 
     @JvmStatic
-    fun switchToLobby() = switchTo(MainMenuChoice.LOBBY)
+    fun switchToLobby() = switchTo()
 
     @JvmStatic
-    fun switchToPolyPlusMenu() = switchTo(MainMenuChoice.POLYPLUS)
+    fun switchToPolyPlusMenu() = switchTo()
 
     @JvmStatic
-    fun switchToVanilla() = switchTo(MainMenuChoice.VANILLA)
+    fun switchToVanilla() = switchTo()
 
-    private fun switchTo(choice: MainMenuChoice) {
-        PolyPlusMainMenuConfig.mainMenu = choice
+    private fun switchTo() {
+        PolyPlusMainMenuConfig.mainMenu = MainMenuChoice.VANILLA
         PolyPlusMainMenuConfig.save()
-        if (choice != MainMenuChoice.LOBBY) LobbyScene.stop()
-        ClientPlatform.setScreen(if (replacesTitleScreen()) create() else TitleScreen())
+        LobbyScene.stop()
+        ClientPlatform.setScreen(TitleScreen())
     }
 
     fun fallBackToVanilla() {
-        LOBBY_LOGGER.warn("The lobby can't run, using the vanilla title screen until the next launch")
-        lobbyFailed = true
+        LOBBY_LOGGER.warn("Custom menus are disabled; returning to the vanilla title screen")
         LobbyScene.stop()
-        ClientPlatform.setScreen(
-            when {
-                ClientPlatform.inWorld() -> null
-                onboardingPending() -> PolyPlusOnboardingScreen()
-                else -> TitleScreen()
-            },
-        )
+        ClientPlatform.setScreen(if (ClientPlatform.inWorld()) null else TitleScreen())
     }
 
     fun openVanillaServerList(screen: JoinMultiplayerScreen) {
@@ -110,7 +93,7 @@ object MainMenuReplacement {
         val left = playing && !inWorld
         if (left && screen is TitleScreen) playing = false
         if (!enabled()) {
-            if (inWorld || screen !is PolyPlusLobbyScreen) return screen
+            if (inWorld || (screen !is PolyPlusLobbyScreen && screen !is PolyPlusMainMenuScreen && screen !is PolyPlusOnboardingScreen)) return screen
             playing = false
             LobbyScene.stop()
             return TitleScreen()

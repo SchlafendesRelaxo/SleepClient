@@ -21,7 +21,7 @@ object GenericModNames {
         "BehindYou (SnapLook)" to "Snaplook",
         "OverflowAnimations" to "Old Animations",
         "OverflowParticles" to "Particles",
-        "EvergreenHUD" to "HUD Elements",
+        "EvergreenHUD" to "SleepHUD",
         "Overlay Tweaks" to "Overlays",
         "FOVChanger" to "FOV Changer",
         "ColorSaturation" to "Color Saturation",

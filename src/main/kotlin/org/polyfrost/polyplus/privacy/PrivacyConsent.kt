@@ -48,7 +48,7 @@ object PrivacyConsent {
         get() = File(FabricLoader.getInstance().gameDir.toFile(), "polyplus/privacy.json")
 
     val managedByLauncher: Boolean
-        get() = LauncherEnvironment.isOneClient && LauncherEnvironment.launcherAcceptedTerms() != false
+        get() = LauncherEnvironment.isSleepClient && LauncherEnvironment.launcherAcceptedTerms() != false
 
     fun state(): State {
         if (!loaded) load()

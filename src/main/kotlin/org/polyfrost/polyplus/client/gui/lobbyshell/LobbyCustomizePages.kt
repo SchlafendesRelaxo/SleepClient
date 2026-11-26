@@ -41,99 +41,14 @@ import org.polyfrost.polyplus.client.gui.widgets.WidgetListEditor
 import org.polyfrost.polyplus.client.gui.widgets.WidgetSurface
 import org.polyfrost.polyplus.client.lobby.LobbyCaptureFrequency
 import org.polyfrost.polyplus.client.lobby.LobbyCaptureView
-import org.polyfrost.polyplus.client.lobby.LobbyMusic
 import org.polyfrost.polyplus.client.lobby.LobbyPacks
 import org.polyfrost.polyplus.client.lobby.LobbyReveal
 import org.polyfrost.polyplus.client.lobby.LobbySceneEntry
 import org.polyfrost.polyplus.client.lobby.LobbySceneStore
 import kotlin.math.roundToInt
 
-private const val VOLUME_STEP = 5f
-private const val DEFAULT_VOLUME = 100f
 private const val LIMIT_MAX = 100f
 private const val LIMIT_STEP = 5f
-
-@Composable
-internal fun MusicPage(lobby: LobbyShell, state: CustomizeState) {
-    var resets by remember { mutableIntStateOf(0) }
-    key(resets) {
-        PanelPageColumn {
-            MusicOptions()
-            PanelSection(null) {
-                ResetRow({
-                    PolyPlusLobbyConfig.lobbyMusic = LobbyMusic.MATCH_SCENE
-                    PolyPlusLobbyConfig.lobbyMusicMuted = false
-                    PolyPlusLobbyConfig.lobbyMusicVolume = DEFAULT_VOLUME
-                    PolyPlusLobbyConfig.muteLobbyMusicUnfocused = false
-                    PolyPlusLobbyConfig.save()
-                    resets++
-                })
-            }
-        }
-    }
-}
-
-@Composable
-private fun MusicOptions() {
-    var music by remember { mutableStateOf(PolyPlusLobbyConfig.lobbyMusic) }
-    var muted by remember { mutableStateOf(PolyPlusLobbyConfig.lobbyMusicMuted) }
-    var volume by remember { mutableFloatStateOf(PolyPlusLobbyConfig.lobbyMusicVolume) }
-    var unfocused by remember { mutableStateOf(PolyPlusLobbyConfig.muteLobbyMusicUnfocused) }
-    val off = muted || music == LobbyMusic.OFF
-    PanelSection("Track", divider = false) {
-        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            LobbyMusic.entries.filter { it != LobbyMusic.OFF }.forEach { track ->
-                ChoiceRow(track.toString(), !off && music == track, musicDetail(track)) {
-                    music = track
-                    muted = false
-                    PolyPlusLobbyConfig.lobbyMusic = track
-                    PolyPlusLobbyConfig.lobbyMusicMuted = false
-                    PolyPlusLobbyConfig.save()
-                }
-            }
-            ChoiceRow("Off", off, null) {
-                muted = true
-                PolyPlusLobbyConfig.lobbyMusicMuted = true
-                PolyPlusLobbyConfig.save()
-            }
-        }
-    }
-    PanelSection("Playback") {
-        if (music == LobbyMusic.MINECRAFT) {
-            PanelHint("The game's own music uses its music volume.")
-        } else {
-            PanelSlider(
-                "Volume",
-                volume,
-                {
-                    volume = it
-                    PolyPlusLobbyConfig.lobbyMusicVolume = it
-                },
-                PolyPlusLobbyConfig::save,
-                step = VOLUME_STEP,
-                enabled = !off,
-                valueText = { "${it.roundToInt()}%" },
-            )
-        }
-        PanelToggle(
-            "Mute when the game is unfocused",
-            unfocused,
-            {
-                unfocused = it
-                PolyPlusLobbyConfig.muteLobbyMusicUnfocused = it
-                PolyPlusLobbyConfig.save()
-            },
-            description = "Fades out while the game is in the background",
-            enabled = !off && music != LobbyMusic.MINECRAFT,
-        )
-    }
-}
-
-private fun musicDetail(music: LobbyMusic): String? = when (music) {
-    LobbyMusic.MATCH_SCENE -> "Follows the scene and time of day"
-    LobbyMusic.MINECRAFT -> "The game's own menu music"
-    else -> null
-}
 
 @Composable
 internal fun CapturePage(lobby: LobbyShell, state: CustomizeState) {

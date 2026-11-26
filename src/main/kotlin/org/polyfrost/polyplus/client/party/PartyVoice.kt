@@ -383,10 +383,10 @@ object PartyVoice {
         if (!micBlocked) {
             return "Your microphone hasn't picked up any sound yet. If you're talking, macOS may not be giving $name " +
                 "your microphone. Allow it in System Settings > Privacy & Security > Microphone if $name is listed there, " +
-                "or play through OneLauncher. This goes away as soon as you're heard."
+                "or launch Minecraft with SleepClient. This goes away as soon as you're heard."
         }
         return "macOS isn't giving $name your microphone. Allow it in System Settings > Privacy & Security > Microphone " +
-            "if $name is listed there, or play through OneLauncher to talk. You can still hear your party."
+            "if $name is listed there, or launch Minecraft with SleepClient to talk. You can still hear your party."
     }
 
     private fun publish() {

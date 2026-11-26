@@ -55,7 +55,7 @@ internal val isMinecraftTheme: Boolean
     @Composable
     get() = OneConfigTheme.current.isMinecraftStyle
 
-// pixel versions of PolyPlus icons, by file name: OneConfig's where it has one, else PolyPlus's own
+// pixel versions of SleepClient icons, by file name: OneConfig's where it has one, else SleepClient's own
 private val PolyPlusPixelIcons = mapOf(
     "user-01" to "user-01",
     "log-in-04" to "log-in-04",

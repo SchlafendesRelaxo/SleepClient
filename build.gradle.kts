@@ -5,14 +5,23 @@ import dev.detekt.gradle.Detekt
 import dev.kikugie.loomx.LoomCompatDependencyExtension
 import dev.kikugie.loomx.LoomCompatProjectExtension
 import dev.kikugie.stonecutter.build.StonecutterBuildExtension
+import groovy.json.JsonSlurper
 import net.fabricmc.loom.api.LoomGradleExtensionAPI
 import net.fabricmc.loom.task.NestJarsAction
 import net.ltgt.gradle.errorprone.errorprone
 import net.ornithemc.ploceus.api.PloceusGradleExtensionApi
+import org.gradle.api.GradleException
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.kotlin.dsl.getByName
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
+import java.util.Collections
+import java.util.zip.ZipFile
 
 plugins {
     java
@@ -355,6 +364,11 @@ tasks.jar {
     }
 }
 
+tasks.withType<AbstractArchiveTask>().configureEach {
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
+
 dependencies {
     minecraft("com.mojang:minecraft:$mcVersion")
 
@@ -573,9 +587,10 @@ tasks.withType<ProcessResources>().configureEach {
                 "mod_id" to modId,
                 "mod_name" to modName,
                 "mod_version" to modVersion,
-                "mod_description" to "Various expansions for the OneClient 'modpack'",
+                "mod_description" to "SleepClient - Premium Custom Minecraft Client",
                 "minor_mc_version" to minecraftPredicate,
                 "oneconfig_version" to oneconfigVersion,
+                "mod_loader" to if (isOrnithe) "ornithe" else "fabric",
             ),
         )
     }
@@ -594,16 +609,410 @@ tasks.matching { it.name == "createMinecraftArtifacts" }.configureEach {
     dependsOn("stonecutterGenerate")
 }
 
-tasks.register<Copy>("buildAndCollect") {
-    group = "build"
-    description = "Builds mod jars and copies results to `build/libs/{mod version}/`"
+val modVersion = property("mod.version") as String
+val expectedModName = property("mod.name") as String
+val runtimeJar = loomx.modJar.flatMap { it.archiveFile }
+val sourcesJar = loomx.modSourcesJar.flatMap { it.archiveFile }
+val runtimeJarName = "$modId-${project.version}.jar"
+val finalRuntimeJar = rootProject.layout.buildDirectory.file("final/$runtimeJarName")
+val finalSourcesJar = rootProject.layout.buildDirectory.file("final/sources/$modId-${project.version}-sources.jar")
+val legacyRuntimeJar = rootProject.layout.buildDirectory.file("libs/$modVersion/$runtimeJarName")
+val legacySourcesJar = rootProject.layout.buildDirectory.file("libs/$modVersion/$modId-${project.version}-sources.jar")
+val modpackJarName = "$expectedModName-$mcVersion-$loader.jar"
+val modpackJar = rootProject.layout.buildDirectory.file("release/mods/$modpackJarName")
+val modpackChecksums = rootProject.layout.buildDirectory.file("release/SHA256SUMS.txt")
+val configuredSleepClientProfileMods = optionalProperty("sleepclient.profile.modsDir")?.let(::File)
+val profileMinecraftVersion = (property("mod.mc_releases") as String).split(',').last().trim()
+val defaultSleepClientProfileMods = System.getenv("APPDATA")?.let {
+    File(it, "SleepClient/SleepClient/clusters/$profileMinecraftVersion ${if (isOrnithe) "Ornithe" else "Fabric"}/mods")
+}
+val sleepClientProfileMods = configuredSleepClientProfileMods ?: defaultSleepClientProfileMods
+    ?.takeIf { it.isDirectory }
+val sleepClientProfileJar = sleepClientProfileMods?.resolve(modpackJarName)
+data class SleepClientRuntimeDependency(
+    val modId: String,
+    val version: String,
+    val source: File,
+    val targetName: String,
+)
 
-    inputs.property("version", project.property("mod.version"))
-    from(loomx.modJar.flatMap { it.archiveFile }, loomx.modSourcesJar.flatMap { it.archiveFile })
-    into(rootProject.layout.buildDirectory.dir("libs/${project.property("mod.version")}"))
+fun resolveSleepClientRuntimeDependencies(): List<SleepClientRuntimeDependency> {
+    val artifacts = configurations.getByName("runtimeClasspath").resolvedConfiguration.resolvedArtifacts
+    val polyCompose = artifacts.filter {
+        val module = it.moduleVersion.id
+        module.group in setOf("remapped.org.polyfrost", "org.polyfrost") &&
+            (module.name == "polycompose-$mcVersion-$loader" ||
+                module.name.startsWith("polycompose-$mcVersion-$loader-"))
+    }
+    if (polyCompose.size != 1) {
+        throw GradleException(
+            "Expected one remapped PolyCompose dependency for $mcVersion-$loader; found ${polyCompose.size}",
+        )
+    }
+
+    val oneConfigDistribution = rootProject.projectDir.parentFile.resolve(
+        "OneConfig/minecraft/versions/$mcVersion-$loader/build/dist/" +
+            "OneConfig-$mcVersion-$loader-$oneconfigVersion.jar",
+    )
+    if (!oneConfigDistribution.isFile) {
+        throw GradleException("SleepClient OneConfig distribution not found: ${oneConfigDistribution.absolutePath}")
+    }
+
+    val polyComposeArtifact = polyCompose.single()
+    return listOf(
+        SleepClientRuntimeDependency(
+            "oneconfig",
+            oneconfigVersion,
+            oneConfigDistribution,
+            "SleepClient-UI-$mcVersion-$loader-$oneconfigVersion.jar",
+        ),
+        SleepClientRuntimeDependency(
+            "polycompose",
+            polyComposeArtifact.moduleVersion.id.version,
+            polyComposeArtifact.file,
+            "polycompose-$mcVersion-$loader-${polyComposeArtifact.moduleVersion.id.version}.jar",
+        ),
+    )
 }
 
-val modVersion = property("mod.version") as String
+val buildTask = tasks.named("build")
+
+fun sha256(file: File): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    file.inputStream().buffered().use { input ->
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) break
+            digest.update(buffer, 0, count)
+        }
+    }
+    return digest.digest().joinToString("") { "%02x".format(it.toInt() and 0xff) }
+}
+
+fun copyAndVerify(source: File, target: File, label: String) {
+    Files.createDirectories(target.parentFile.toPath())
+    val temporary = Files.createTempFile(target.parentFile.toPath(), ".sleepclient-", ".tmp")
+    try {
+        Files.copy(source.toPath(), temporary, StandardCopyOption.REPLACE_EXISTING)
+        if (sha256(source) != sha256(temporary.toFile())) {
+            throw GradleException("$label JAR copy failed verification: ${target.absolutePath}")
+        }
+        Files.move(temporary, target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+    } finally {
+        Files.deleteIfExists(temporary)
+    }
+}
+
+fun verifySleepClientDependency(dependency: SleepClientRuntimeDependency, file: File) {
+    if (!file.isFile) throw GradleException("SleepClient ${dependency.modId} dependency not found: ${file.absolutePath}")
+
+    ZipFile(file).use { zip ->
+        val metadataEntry = zip.getEntry("fabric.mod.json") ?: zip.getEntry("ornithe.mod.json")
+            ?: throw GradleException("SleepClient ${dependency.modId} dependency is missing mod metadata")
+        val metadata = zip.getInputStream(metadataEntry).bufferedReader(Charsets.UTF_8).use {
+            JsonSlurper().parseText(it.readText()) as? Map<*, *>
+                ?: throw GradleException("Invalid ${metadataEntry.name} in ${file.name}")
+        }
+
+        if (metadata["id"] != dependency.modId) {
+            throw GradleException("Unexpected mod ID in ${file.name}: ${metadata["id"]}")
+        }
+        if (metadata["version"] != dependency.version) {
+            throw GradleException("Unexpected mod version in ${file.name}: ${metadata["version"]}")
+        }
+        if (dependency.modId == "oneconfig") {
+            if (metadata["name"] != "SleepClient") {
+                throw GradleException("OneConfig runtime dependency is not branded SleepClient")
+            }
+            val providedIds = (metadata["provides"] as? List<*>)?.filterIsInstance<String>().orEmpty()
+            if ("oneconfigv1" !in providedIds) {
+                throw GradleException("SleepClient UI dependency no longer provides the required OneConfig API ID")
+            }
+        }
+    }
+}
+
+val verifySleepClientArchive: (File) -> Unit = { file ->
+    if (!file.isFile) throw GradleException("SleepClient runtime JAR not found: ${file.absolutePath}")
+    if (file.name != runtimeJarName) {
+        throw GradleException("Unexpected runtime JAR name '${file.name}', expected '$runtimeJarName'")
+    }
+
+    ZipFile(file).use { zip ->
+        val entries = Collections.list(zip.entries())
+        val entryNames = entries.map { it.name }.toSet()
+        val metadataEntry = zip.getEntry("fabric.mod.json")
+            ?: throw GradleException("SleepClient JAR is missing fabric.mod.json")
+        val metadata = zip.getInputStream(metadataEntry).bufferedReader(Charsets.UTF_8).use {
+            JsonSlurper().parseText(it.readText()) as? Map<*, *>
+                ?: throw GradleException("Invalid fabric.mod.json in ${file.name}")
+        }
+
+        if (metadata["id"] != modId) throw GradleException("Unexpected mod ID in ${file.name}: ${metadata["id"]}")
+        if (metadata["name"] != expectedModName) {
+            throw GradleException("Unexpected mod name in ${file.name}: ${metadata["name"]}")
+        }
+        if (metadata["version"] != modVersion) {
+            throw GradleException("Unexpected mod version in ${file.name}: ${metadata["version"]}")
+        }
+        val providedIds = (metadata["provides"] as? List<*>)?.filterIsInstance<String>().orEmpty()
+        if ("oneclient" in providedIds) {
+            throw GradleException("SleepClient metadata must not advertise the legacy OneClient mod ID")
+        }
+
+        val dependencies = metadata["depends"] as? Map<*, *>
+            ?: throw GradleException("SleepClient JAR is missing dependency metadata")
+        if (dependencies["oneconfigv1"] != ">=$oneconfigVersion") {
+            throw GradleException("SleepClient JAR has an incorrect OneConfig dependency")
+        }
+        if (dependencies["polycompose"] != ">=1.0.0") {
+            throw GradleException("SleepClient JAR has an incorrect PolyCompose dependency")
+        }
+
+        val requiredEntries = mutableSetOf(
+            "assets/polyplus/brand/sleepclient.svg",
+            "org/polyfrost/polyplus/PolyPlusEntrypoint.class",
+            "org/polyfrost/polyplus/client/gui/PolyPlusOneConfigIntegration.class",
+            "org/polyfrost/polyplus/client/party/Parties.class",
+            "org/polyfrost/polyplus/client/party/PartyVoiceHud.class",
+            "org/polyfrost/polyplus/client/gui/ClientWatermark.class",
+            "org/polyfrost/polyplus/mixin/client/MixinScreenWatermark.class",
+        )
+        if (isOrnithe) {
+            requiredEntries.add("org/polyfrost/polyplus/mixin/client/MixinInventoryMenuScreen.class")
+        } else {
+            requiredEntries.add("org/polyfrost/polyplus/mixin/client/MixinWatermarkMouse.class")
+        }
+        if (mcVersion == "1.21.11") {
+            requiredEntries.add("org/polyfrost/polyplus/mixin/client/MixinMenuMusic.class")
+        }
+        val missingEntries = requiredEntries - entryNames
+        if (missingEntries.isNotEmpty()) {
+            throw GradleException("SleepClient JAR is missing required entries: ${missingEntries.joinToString()}")
+        }
+        val tutorialEntries = entryNames.filter {
+            it.startsWith("org/polyfrost/polyplus/client/gui/lobbyshell/LobbyTour")
+        }
+        if (tutorialEntries.isNotEmpty()) {
+            throw GradleException("SleepClient JAR still contains the removed lobby tutorial: ${tutorialEntries.joinToString()}")
+        }
+
+        val mixinFiles = metadata["mixins"] as? List<*>
+            ?: throw GradleException("SleepClient JAR is missing its mixin configuration")
+        val mixinFileName = mixinFiles.filterIsInstance<String>().firstOrNull { it == "mixins.sleepclient.json" }
+            ?: throw GradleException("SleepClient JAR is missing mixins.sleepclient.json")
+        val mixinEntry = zip.getEntry(mixinFileName)
+            ?: throw GradleException("SleepClient JAR is missing $mixinFileName")
+        val mixinJson = zip.getInputStream(mixinEntry).bufferedReader(Charsets.UTF_8).use { it.readText() }
+            .replace(Regex("""(?s)/\*.*?\*/"""), "")
+            .replace(Regex("""(?m)^\s*//[^\r\n]*(?:\r?\n|$)"""), "")
+            .replace(Regex(""",\s*([}\]])"""), "\$1")
+        val mixinConfig = JsonSlurper().parseText(mixinJson) as? Map<*, *>
+            ?: throw GradleException("Invalid $mixinFileName in ${file.name}")
+        val clientMixins = (mixinConfig["client"] as? List<*>)?.filterIsInstance<String>().orEmpty()
+        val commonMixins = (mixinConfig["mixins"] as? List<*>)?.filterIsInstance<String>().orEmpty()
+        val activeMixins = (clientMixins + commonMixins).toSet()
+        val forbiddenScreenMixins = setOf(
+            "client.MixinGui",
+            "client.MixinTitleScreen",
+            "client.MixinPauseScreen",
+            "client.MixinGenericMessageScreen",
+            "client.MixinLevelLoadingScreen",
+            "client.MixinMinecraftWorldLoad",
+            "client.MixinGameRendererShellScene",
+            "client.MixinScreen",
+            "client.MixinPanorama",
+            "client.MixinCubeMap",
+            "client.MixinProgressRenderer",
+            "client.lobby.MixinScreen",
+            "client.lobby.MixinLoadingOverlay",
+            "client.lobby.MixinInitialScreens",
+            "client.lobby.MixinMinecraftStartup",
+            "client.pause.MixinPauseCamera",
+            "client.pause.MixinPauseHand",
+            "client.pause.MixinPauseCulling",
+            "client.pause.MixinPauseRenderer",
+            "compat.confirmdisconnect.MixinConfirmDisconnectPauseScreen",
+        )
+        val remainingScreenMixins = forbiddenScreenMixins intersect activeMixins
+        if (remainingScreenMixins.isNotEmpty()) {
+            throw GradleException("SleepClient JAR still registers custom screen mixins: ${remainingScreenMixins.joinToString()}")
+        }
+        val requiredHudMixins = setOf(
+            "client.MixinScreenWatermark",
+            if (isOrnithe) "client.MixinInventoryMenuScreen" else "client.MixinWatermarkMouse",
+        )
+        val missingHudMixins = requiredHudMixins - clientMixins.toSet()
+        if (missingHudMixins.isNotEmpty()) {
+            throw GradleException("SleepClient JAR is missing HUD mixins: ${missingHudMixins.joinToString()}")
+        }
+        if (mcVersion == "1.21.11" && "client.MixinMenuMusic" !in clientMixins) {
+            throw GradleException("SleepClient JAR does not register menu-only music suppression")
+        }
+
+        val legacyBrandAssets = entries.asSequence()
+            .map { it.name }
+            .filter { it.startsWith("assets/") && it.contains("oneclient", ignoreCase = true) }
+            .toList()
+        if (legacyBrandAssets.isNotEmpty()) {
+            throw GradleException("SleepClient JAR contains legacy OneClient assets: ${legacyBrandAssets.joinToString()}")
+        }
+
+        val textExtensions = setOf("css", "html", "json", "lang", "properties", "svg", "toml", "txt", "xml", "yaml", "yml")
+        for (entry in entries) {
+            if (entry.isDirectory) continue
+            zip.getInputStream(entry).use { input ->
+                val extension = entry.name.substringAfterLast('.', "").lowercase()
+                if (entry.name.startsWith("assets/") && extension in textExtensions) {
+                    val content = input.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    if (content.contains("oneclient", ignoreCase = true)) {
+                        throw GradleException("SleepClient resource ${entry.name} contains legacy OneClient text")
+                    }
+                    if (entry.name == "assets/polyplus/brand/sleepclient.svg" && !content.contains("SleepClient")) {
+                        throw GradleException("SleepClient wordmark is missing its product name")
+                    }
+                } else {
+                    input.copyTo(OutputStream.nullOutputStream())
+                }
+            }
+        }
+    }
+}
+
+tasks.register("verifySleepClientJar") {
+    group = "verification"
+    description = "Validates SleepClient metadata, Vanilla screen policy, preserved HUD, branding, and dependencies."
+    dependsOn(loomx.modJar)
+    inputs.file(runtimeJar)
+    doLast {
+        verifySleepClientArchive(runtimeJar.get().asFile)
+    }
+}
+
+val collectFinalArtifacts = tasks.register("collectFinalArtifacts") {
+    group = "build"
+    description = "Verifies and collects the versioned runtime JAR under `build/final/`."
+
+    dependsOn("verifySleepClientJar", loomx.modSourcesJar)
+    mustRunAfter(buildTask)
+    onlyIf("the complete build must succeed before collecting artifacts") {
+        buildTask.get().state.failure == null
+    }
+    inputs.files(runtimeJar, sourcesJar)
+    outputs.files(finalRuntimeJar, finalSourcesJar, modpackJar)
+    outputs.upToDateWhen { false }
+    sleepClientProfileJar?.let { outputs.file(it) }
+    doLast {
+        val runtimeSource = runtimeJar.get().asFile
+        val sourcesSource = sourcesJar.get().asFile
+        val runtimeTarget = finalRuntimeJar.get().asFile
+        val sourcesTarget = finalSourcesJar.get().asFile
+        val modpackTarget = modpackJar.get().asFile
+        val checksumsTarget = modpackChecksums.get().asFile
+        if (!sourcesSource.isFile) throw GradleException("SleepClient sources JAR not found: ${sourcesSource.absolutePath}")
+
+        Files.createDirectories(runtimeTarget.parentFile.toPath())
+        Files.createDirectories(sourcesTarget.parentFile.toPath())
+        Files.createDirectories(modpackTarget.parentFile.toPath())
+        Files.copy(runtimeSource.toPath(), runtimeTarget.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(sourcesSource.toPath(), sourcesTarget.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        try {
+            verifySleepClientArchive(runtimeTarget)
+        } catch (error: Exception) {
+            Files.deleteIfExists(runtimeTarget.toPath())
+            throw error
+        }
+        Files.deleteIfExists(legacyRuntimeJar.get().asFile.toPath())
+        Files.deleteIfExists(legacySourcesJar.get().asFile.toPath())
+
+        synchronized(rootProject) {
+            val sleepClientRuntimeDependencies = resolveSleepClientRuntimeDependencies()
+            val runtimeHash = sha256(runtimeTarget)
+            copyAndVerify(runtimeTarget, modpackTarget, "Modpack")
+            val managedDependencyPrefixes = listOf(
+                "OneConfig-$mcVersion-$loader-",
+                "SleepClient-UI-$mcVersion-$loader-",
+                "polycompose-$mcVersion-$loader-",
+            )
+            val dependencyTargets = sleepClientRuntimeDependencies.map { dependency ->
+                val target = rootProject.layout.buildDirectory
+                    .file("release/mods/${dependency.targetName}")
+                    .get()
+                    .asFile
+                copyAndVerify(dependency.source, target, dependency.modId)
+                verifySleepClientDependency(dependency, target)
+                target
+            }
+            val releaseModsDir = modpackTarget.parentFile
+            releaseModsDir.listFiles()
+                ?.filter { file -> file.isFile && managedDependencyPrefixes.any(file.name::startsWith) }
+                ?.filterNot { stale -> dependencyTargets.any { it.canonicalFile == stale.canonicalFile } }
+                ?.forEach { stale -> Files.deleteIfExists(stale.toPath()) }
+
+            val existingLines = if (checksumsTarget.isFile) {
+                Files.readAllLines(checksumsTarget.toPath())
+            } else {
+                emptyList()
+            }
+            val managedNames = dependencyTargets.map { it.name }.toSet() + modpackJarName
+            val updatedLines = existingLines
+                .filterNot { line ->
+                    val name = line.substringAfter(" *", "").substringBefore(' ')
+                    name in managedNames || managedDependencyPrefixes.any(name::startsWith)
+                }
+                .toMutableList()
+            updatedLines.add("$runtimeHash *$modpackJarName ${modpackTarget.length()} bytes")
+            dependencyTargets.forEach { dependency ->
+                updatedLines.add("${sha256(dependency)} *${dependency.name} ${dependency.length()} bytes")
+            }
+            updatedLines.sortBy { it.substringAfter(" *", "").substringBefore(' ') }
+
+            Files.createDirectories(checksumsTarget.parentFile.toPath())
+            val checksumsTemp = Files.createTempFile(checksumsTarget.parentFile.toPath(), ".sha256-", ".tmp")
+            try {
+                Files.write(checksumsTemp, updatedLines, Charsets.UTF_8)
+                Files.move(checksumsTemp, checksumsTarget.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            } finally {
+                Files.deleteIfExists(checksumsTemp)
+            }
+
+            sleepClientProfileJar?.let { profileJar ->
+                copyAndVerify(runtimeTarget, profileJar, "SleepClient profile")
+                logger.lifecycle("Updated SleepClient profile JAR: ${profileJar.absolutePath}")
+            }
+            sleepClientProfileMods?.let { profileMods ->
+                val profilePrefixes = managedDependencyPrefixes
+                profileMods.listFiles()
+                    ?.filter { file -> file.isFile && profilePrefixes.any(file.name::startsWith) }
+                    ?.filterNot { stale -> sleepClientRuntimeDependencies.any { profileMods.resolve(it.targetName).canonicalFile == stale.canonicalFile } }
+                    ?.forEach { stale -> Files.deleteIfExists(stale.toPath()) }
+                sleepClientRuntimeDependencies.forEach { dependency ->
+                    val target = profileMods.resolve(dependency.targetName)
+                    copyAndVerify(dependency.source, target, "SleepClient ${dependency.modId} profile")
+                    verifySleepClientDependency(dependency, target)
+                    logger.lifecycle("Updated SleepClient ${dependency.modId} dependency: ${target.absolutePath}")
+                }
+            }
+        }
+
+        logger.lifecycle("Verified current SleepClient runtime JAR: ${runtimeTarget.absolutePath}")
+        logger.lifecycle("Sources JAR collected separately: ${sourcesTarget.absolutePath}")
+        logger.lifecycle("Updated modpack runtime JAR: ${modpackTarget.absolutePath}")
+    }
+}
+
+if (project != rootProject) {
+    buildTask.configure {
+        finalizedBy(collectFinalArtifacts)
+    }
+}
+
+tasks.register("buildAndCollect") {
+    group = "build"
+    description = "Runs the complete build, then verifies and collects versioned runtime and sources JARs."
+    dependsOn(buildTask, collectFinalArtifacts)
+}
 
 // these intentionally support multiple different properties, do not remove
 val modrinthId = optionalProperty("oneconfig.publish.modrinth", "publish.modrinth")

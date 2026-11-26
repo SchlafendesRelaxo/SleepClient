@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(targets = "me.shedaniel.autoconfig.serializer.GsonConfigSerializer", remap = false)
 public class MixinGsonConfigSerializer {
     @Unique
-    private static final Logger polyplus$LOGGER = LogManager.getLogger("PolyPlus/Compat");
+    private static final Logger polyplus$LOGGER = LogManager.getLogger("SleepClient/Compat");
 
     // Gson returns null for a 0 byte file causing AutoConfig to crash
     @WrapOperation(

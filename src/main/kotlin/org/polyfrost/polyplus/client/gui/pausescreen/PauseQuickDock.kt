@@ -140,7 +140,6 @@ internal fun BoxScope.QuickDockScreen(screen: OneClientPauseScreen, narrow: Bool
             DockResume(screen, place.title, narrow)
             DockRule()
             if (screen.online) DockItem(asset("message-chat-circle"), "Social", badge = socialDotLabel(groups.any { it.unread }, invites.isNotEmpty()), onClick = screen::openSocial)
-            DockItem(asset("diamond-01"), "Wardrobe", onClick = screen::openWardrobe)
             screen.capture.entry(PauseSlot.OPTIONS)?.let { DockItem(it.glyph, "Options", enabled = it.enabled, onClick = it.press) }
             if (screen.canWorldOptions) DockItem(asset("globe-01"), "World options", width = 88.dp, onClick = screen::openWorldOptions)
             screen.capture.entry(PauseSlot.WORLD)?.let { DockItem(asset("users-01"), it.label, width = 88.dp, enabled = it.enabled, onClick = it.press) }

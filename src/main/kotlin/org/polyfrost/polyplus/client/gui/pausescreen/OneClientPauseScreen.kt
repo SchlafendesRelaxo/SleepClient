@@ -334,14 +334,8 @@ object PauseRouter {
         holding = false
         wardrobeReturn = null
         wardrobePlayer = null
-        if (screen === classic) {
-            classic = null
-            return screen
-        }
-        if (!showsMenu(screen) || ReplayProviders.inReplay) return screen
-        val style = (if (ClientPlatform.windowFocused()) null else PolyPlusPauseConfig.focusLossPauseStyle.style) ?: PolyPlusPauseConfig.pauseScreenStyle
-        shown = style
-        return if (style == PauseScreenStyle.VANILLA) screen else OneClientPauseScreen(screen, style)
+        classic = null
+        return screen
     }
 
     private fun showsMenu(screen: PauseScreen): Boolean =

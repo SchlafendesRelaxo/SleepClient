@@ -24,7 +24,7 @@ private const val MAX_CUSTOM_MAIN_MENU_FPS_LIMIT = 260f
 
 object PolyPlusMainMenuConfig : Config(
     "${PolyPlusConstants.ID}-mainmenu.json",
-    "Main Menu (OneClient)",
+    "Main Menu",
     Category.OTHER,
 ) {
     @Transient
@@ -37,12 +37,7 @@ object PolyPlusMainMenuConfig : Config(
     var lastSeenNewsMillis = 0L
 
     @JvmStatic
-    @Dropdown(
-        title = "Main Menu",
-        description = "Choose which main menu the game starts on.",
-        options = ["Lobby", "OneClient v1", "Vanilla"],
-    )
-    var mainMenu: MainMenuChoice = MainMenuChoice.LOBBY
+    var mainMenu: MainMenuChoice = MainMenuChoice.VANILLA
 
     @JvmStatic
     @Switch(
@@ -55,7 +50,7 @@ object PolyPlusMainMenuConfig : Config(
     @JvmStatic
     @Switch(
         title = "Swap Quickplay and Player Preview",
-        description = "Show Quickplay on the right and your player preview on the left in the OneClient v1 main menu.",
+        description = "Show Quickplay on the right and your player preview on the left in the SleepClient v1 main menu.",
         subcategory = "Elements",
     )
     var swapMainMenuSideColumns = false
@@ -78,8 +73,8 @@ object PolyPlusMainMenuConfig : Config(
 
     @JvmStatic
     @Switch(
-        title = "Hide Wardrobe Button",
-        description = "Hide the Wardrobe tab in the lobby.",
+        title = "Hide Skins Button",
+        description = "Hide the Skins tab in the lobby.",
         subcategory = "Elements",
     )
     var hideMainMenuCosmetics = false
@@ -139,8 +134,8 @@ object PolyPlusMainMenuConfig : Config(
     @JvmStatic
     @Dropdown(
         title = "Menu Backdrop",
-        description = "Choose what appears behind the OneClient v1 main menu.",
-        options = ["PolyPlus", "Minecraft Panorama", "Vanilla Panorama"],
+        description = "Choose what appears behind the SleepClient v1 main menu.",
+        options = ["SleepClient", "Minecraft Panorama", "Vanilla Panorama"],
         subcategory = "Background",
     )
     var mainMenuBackground: MainMenuBackground = MainMenuBackground.PANORAMA
@@ -148,7 +143,7 @@ object PolyPlusMainMenuConfig : Config(
     @JvmStatic
     @Switch(
         title = "Custom Panorama",
-        description = "Use the PolyPlus panorama instead of the vanilla Minecraft one.",
+        description = "Use the SleepClient panorama instead of the vanilla Minecraft one.",
         subcategory = "Background",
     )
     var customPanorama = true
@@ -183,6 +178,10 @@ object PolyPlusMainMenuConfig : Config(
         PolyPlusPauseConfig.preload()
         PolyPlusLobbyConfig.preload()
         preload()
+        if (mainMenu != MainMenuChoice.VANILLA) {
+            mainMenu = MainMenuChoice.VANILLA
+            save()
+        }
         migrateFromLegacyConfig()
 
         addDependency("mainMenuFpsLimit", "Main Menu FPS Limit") {

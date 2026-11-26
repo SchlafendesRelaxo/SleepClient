@@ -4,7 +4,7 @@ import org.polyfrost.polyplus.PolyPlusConstants
 import org.polyfrost.polyplus.client.PolyPlusConfig
 
 object EosConstants {
-    const val PRODUCT_NAME: String = "PolyPlus"
+    const val PRODUCT_NAME: String = "SleepClient"
     const val PRODUCT_VERSION: String = "1.0"
 }
 

@@ -253,10 +253,10 @@ internal fun FooterBrandText(platform: String, fontSize: TextUnit = 13.sp, prima
     BasicText(
         text = buildAnnotatedString {
             withStyle(SpanStyle(color = primary, fontWeight = FontWeight.Bold, fontFamily = Outfit)) {
-                append("ONECLIENT")
+                append("SLEEPCLIENT")
             }
             withStyle(SpanStyle(color = secondary, fontFamily = bodyFont)) {
-                append("   ")
+                append(" by SleepCodes   ")
                 append(platform)
             }
         },

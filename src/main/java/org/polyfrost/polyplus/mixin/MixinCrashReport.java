@@ -2,7 +2,6 @@ package org.polyfrost.polyplus.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.CrashReport;
-import org.polyfrost.polyplus.PolyPlusConstants;
 import org.polyfrost.polyplus.client.PolyPlusSentry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,8 +34,7 @@ public class MixinCrashReport {
                 + "\n\n"
                 + "Additional note for players:" + "\n"
                 + "Please do not try to input this crash report into any AI systems for analysis or troubleshooting. "
-                + "It's far more effective to seek help from human support channels, such as our community forums or official help desks. "
-                + "Should you believe this crash is due to a Polyfrost mod, or " + PolyPlusConstants.NAME + " specifically, please reach out to our support team or community for assistance. "
-                + "Our Discord server: " + PolyPlusConstants.DISCORD_URL + "\n";
+                + "It's more effective to seek help from human support channels. "
+                + "If you believe this crash is due to SleepClient, please contact SleepCodes support.\n";
     }
 }

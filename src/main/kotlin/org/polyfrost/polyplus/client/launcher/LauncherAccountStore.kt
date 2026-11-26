@@ -13,7 +13,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 object LauncherAccountStore {
-    private val LOGGER = LogManager.getLogger("PolyPlus/Accounts")
+    private val LOGGER = LogManager.getLogger("SleepClient/Accounts")
     private const val AUTH_FILE = "auth.json"
     private const val MAX_WALK_UP = 5
 
@@ -106,7 +106,7 @@ object LauncherAccountStore {
 
     private fun platformLauncherDirs(): List<File> {
         val home = File(System.getProperty("user.home") ?: return emptyList())
-        return listOf("OneClient", "OneClient-dev").map { app ->
+        return listOf("SleepClient", "SleepClient-dev").map { app ->
             val legacy = legacyLauncherDir(home, app)
             if (File(legacy, "settings.json").isFile) legacy else File(dataDir(home), "Polyfrost/$app")
         }

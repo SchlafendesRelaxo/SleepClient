@@ -95,12 +95,12 @@ private fun NewsHeader(onBack: () -> Unit) {
 @Composable
 private fun NewsStatus(modifier: Modifier) {
     when {
-        !NewsFeed.enabled -> EmptyState("News is off", modifier, "Turn on online features to see posts from the Polyfrost blog.")
+        !NewsFeed.enabled -> EmptyState("News is off", modifier, "Turn on online features to see posts in the news feed.")
         NewsFeed.loading || !NewsFeed.loaded -> EmptyState("Loading news", modifier)
         NewsFeed.failed -> EmptyState("Couldn't load news", modifier, "Check your connection and try again.") {
             TextButton(text = "Try again", onClick = { NewsFeed.refresh(force = true) }, style = ControlStyle.Primary, size = ControlSize.Large)
         }
-        else -> EmptyState("No news yet", modifier, "New posts from the Polyfrost blog show up here.")
+        else -> EmptyState("No news yet", modifier, "New posts show up here.")
     }
 }
 

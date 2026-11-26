@@ -61,10 +61,10 @@ data class ServiceStatus(
     fun summary(): String {
         val names = affected.joinToString(", ")
         return when {
-            maintenance && names.isNotEmpty() -> "OneClient maintenance on $names"
-            maintenance -> "OneClient services are under maintenance"
-            names.isNotEmpty() -> "OneClient services with problems: $names"
-            else -> "Some OneClient services have problems"
+            maintenance && names.isNotEmpty() -> "SleepClient maintenance on $names"
+            maintenance -> "SleepClient services are under maintenance"
+            names.isNotEmpty() -> "SleepClient services with problems: $names"
+            else -> "Some SleepClient services have problems"
         }
     }
 }
@@ -78,9 +78,9 @@ object StatusPage {
     private const val POLL_INTERVAL_MS = 5 * 60 * 1000L
     private const val RESOURCE_TYPE = "status_page_resource"
     private const val BACKEND_SERVICE = "Poly+"
-    private const val TITLE = "PolyPlus"
+    private const val TITLE = "SleepClient"
 
-    private val LOGGER = LogManager.getLogger("PolyPlus/Status")
+    private val LOGGER = LogManager.getLogger("SleepClient/Status")
 
     private val _status = MutableStateFlow<ServiceStatus?>(null)
     val status: StateFlow<ServiceStatus?> = _status.asStateFlow()
@@ -133,7 +133,7 @@ object StatusPage {
         if (stateChanged) notifiedState = current.state
 
         when {
-            stateChanged && current.operational -> notify { Notifications.success(TITLE, "All OneClient services are working again.") }
+            stateChanged && current.operational -> notify { Notifications.success(TITLE, "All SleepClient services are working again.") }
             stateChanged -> {
                 val message = listOfNotNull("${current.summary()}.", announcement).joinToString(" ")
                 notify {
